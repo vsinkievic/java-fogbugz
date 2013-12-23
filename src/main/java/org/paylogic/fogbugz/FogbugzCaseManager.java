@@ -1,20 +1,16 @@
 package org.paylogic.fogbugz;
 
 import lombok.extern.java.Log;
-import org.w3c.dom.Document;
-import org.w3c.dom.NodeList;
+import org.w3c.dom.*;
 
+import javax.xml.bind.DatatypeConverter;
 import javax.xml.parsers.DocumentBuilder;
 import javax.xml.parsers.DocumentBuilderFactory;
 import java.io.UnsupportedEncodingException;
 import java.net.HttpURLConnection;
-import java.net.MalformedURLException;
 import java.net.URL;
 import java.net.URLEncoder;
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 import java.util.logging.Level;
 
 /**
@@ -29,13 +25,14 @@ public class FogbugzCaseManager {
     private String originalBranchFieldname;
     private String targetBranchFieldname;
     private int mergekeeperUserId;
+    private int gatekeeperUserId;
 
     /**
      * Constructor of FogbugzCaseManager.
      */
     public FogbugzCaseManager(String url, String token, String featureBranchFieldname,
                               String originalBranchFieldname, String targetBranchFieldname,
-                              int mergekeeperUserId) {
+                              int mergekeeperUserId, int gatekeeperUserId) {
 
         this.url = url;
         this.token = token;
@@ -43,6 +40,7 @@ public class FogbugzCaseManager {
         this.originalBranchFieldname = originalBranchFieldname;
         this.targetBranchFieldname = targetBranchFieldname;
         this.mergekeeperUserId = mergekeeperUserId;
+        this.gatekeeperUserId = gatekeeperUserId;
     }
 
     /**
@@ -121,6 +119,70 @@ public class FogbugzCaseManager {
     }
 
     /**
+     * Retrieves all events for a certain case.
+     * @param id Case id to fetch events from
+     * @return list of FogbugzEvents
+     */
+    public List<FogbugzEvent> getEventsForCase(int id) {
+        try {
+            HashMap params = new HashMap();  // Hashmap defaults to <String, String>
+            params.put("cmd", "search");
+            params.put("q", Integer.toString(id));
+            params.put("cols", "events");
+
+            URL uri = new URL(this.mapToFogbugzUrl(params));
+            HttpURLConnection con = (HttpURLConnection) uri.openConnection();
+            DocumentBuilderFactory dbFactory = DocumentBuilderFactory.newInstance();
+            DocumentBuilder dBuilder = dbFactory.newDocumentBuilder();
+            Document doc = dBuilder.parse(con.getInputStream());
+
+            List<FogbugzEvent> eventList = new ArrayList<FogbugzEvent>();
+            NodeList eventsNodeList = doc.getElementsByTagName("event");
+            if (eventsNodeList != null && eventsNodeList.getLength() != 0) {
+                for (int i = 0; i< eventsNodeList.getLength(); i++) {
+                    Element currentNode = (Element) eventsNodeList.item(i);
+                    // Construct event object from retrieved data.
+                    eventList.add(new FogbugzEvent(
+                            Integer.parseInt(currentNode.getElementsByTagName("ixBugEvent").item(0).getTextContent()), // eventid
+                            id, // caseid
+                            currentNode.getElementsByTagName("sVerb").item(0).getTextContent(), // verb
+                            Integer.parseInt(currentNode.getElementsByTagName("ixPerson").item(0).getTextContent()), // person
+                            Integer.parseInt(currentNode.getElementsByTagName("ixPersonAssignedTo").item(0).getTextContent()), // personAssignedTo
+                            DatatypeConverter.parseDateTime(currentNode.getElementsByTagName("dt").item(0).getTextContent()).getTime(), // dateTime
+                            currentNode.getElementsByTagName("evtDescription").item(0).getTextContent(), // evtDescription
+                            currentNode.getElementsByTagName("sPerson").item(0).getTextContent() // sPerson
+                    ));
+                }
+            }
+
+            return eventList;
+
+        } catch (Exception e) {
+            FogbugzCaseManager.log.log(Level.SEVERE, "Exception while fetching case " + Integer.toString(id), e);
+        }
+        return null;
+    }
+
+    /**
+     * Loop through all FogbugzEvent for given case, and return last (in time) with assignment to gatekeepers.
+     * @param caseId
+     * @return Last event with gatekeeper assignment or null.
+     */
+    public FogbugzEvent getLastAssignedToGatekeepersEvent(int caseId) {
+        List<FogbugzEvent> eventList = this.getEventsForCase(caseId);
+        Collections.sort(eventList);
+        Collections.reverse(eventList);
+
+        for (FogbugzEvent ev: eventList) {
+            if (ev.getPersonAssignedTo() == this.gatekeeperUserId) {
+                return ev;
+            }
+        }
+
+        return null;
+    }
+
+    /**
      * Saves a case to fogbugz using its API.
      * Supports creating new cases, by giving case 0 as caseId.
      * @param fbCase The case to save.
@@ -176,6 +238,11 @@ public class FogbugzCaseManager {
      */
     public FogbugzCase assignToMergekeepers(FogbugzCase fbCase) {
         fbCase.setAssignedTo(this.mergekeeperUserId);
+        return fbCase;
+    }
+
+    public FogbugzCase assignToGatekeepers(FogbugzCase fbCase) {
+        fbCase.setAssignedTo(this.gatekeeperUserId);
         return fbCase;
     }
 
