@@ -1,6 +1,9 @@
 package org.paylogic.fogbugz;
 
 import lombok.extern.java.Log;
+import org.apache.http.NameValuePair;
+import org.apache.http.client.utils.URLEncodedUtils;
+import org.apache.http.message.BasicNameValuePair;
 import org.w3c.dom.*;
 
 import javax.xml.bind.DatatypeConverter;
@@ -57,17 +60,14 @@ public class FogbugzCaseManager {
      * @return String which represents API URL.
      */
     private String mapToFogbugzUrl(Map<String, String> params) {
-        String output = this.getFogbugzUrl();
+        List<NameValuePair> paramList = new ArrayList<NameValuePair>();
         for (String key: params.keySet()) {
-            try {
-                String value = params.get(key);
-                if (!value.isEmpty()) {
-                    output += "&" + key + "=" + URLEncoder.encode(value, "UTF-8");
-                }
-            } catch (UnsupportedEncodingException e) {
-                FogbugzCaseManager.log.info("Unsupported Encoding Exception, why?");
+            String value = params.get(key);
+            if (!value.isEmpty()) {
+                paramList.add(new BasicNameValuePair(key, value));
             }
         }
+        String output = this.getFogbugzUrl() + "&" + URLEncodedUtils.format(paramList, '&', "UTF-8");
         FogbugzCaseManager.log.info("Generated URL to send to Fogbugz: " + output);
         return output;
     }
