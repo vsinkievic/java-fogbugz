@@ -20,11 +20,11 @@ public class FogbugzCase {
     @Getter @Setter private String featureBranch;
     @Getter @Setter private String originalBranch;
     @Getter @Setter private String targetBranch;
-    //@Getter @Setter private String milestone;
+    @Getter @Setter private String milestone;
 
     public FogbugzCase(int id, String title, int openedBy, int assignedTo,
                        List<String> tags, boolean isOpen, String featureBranch,
-                       String originalBranch, String targetBranch) {
+                       String originalBranch, String targetBranch, String milestone) {
         this.id = id;
         this.title = title;
         this.openedBy = openedBy;
@@ -34,12 +34,12 @@ public class FogbugzCase {
         this.featureBranch = featureBranch;
         this.originalBranch = originalBranch;
         this.targetBranch = targetBranch;
-        //this.milestone = milestone;
+        this.milestone = milestone;
     }
 
     public FogbugzCase(int id, String title, int openedBy, int assignedTo,
                        String tags, boolean isOpen, String featureBranch,
-                       String originalBranch, String targetBranch) {
+                       String originalBranch, String targetBranch, String milestone) {
         this.id = id;
         this.title = title;
         this.openedBy = openedBy;
@@ -49,7 +49,7 @@ public class FogbugzCase {
         this.featureBranch = featureBranch;
         this.originalBranch = originalBranch;
         this.targetBranch = targetBranch;
-        //this.milestone = milestone;
+        this.milestone = milestone;
     }
 
     /**

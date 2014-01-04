@@ -82,7 +82,7 @@ public class FogbugzCaseManager {
             HashMap params = new HashMap();  // Hashmap defaults to <String, String>
             params.put("cmd", "search");
             params.put("q", Integer.toString(id));
-            params.put("cols", "ixBug,tags,fOpen,sTitle,ixPersonOpenedBy,ixPersonAssignedTo," +
+            params.put("cols", "ixBug,tags,fOpen,sTitle,sFixFor,ixPersonOpenedBy,ixPersonAssignedTo," +
                                       this.getCustomFieldsCSV());  // TODO: milestones.
 
             URL uri = new URL(this.mapToFogbugzUrl(params));
@@ -109,8 +109,9 @@ public class FogbugzCaseManager {
                     Boolean.valueOf(doc.getElementsByTagName("fOpen").item(0).getTextContent()),
                     doc.getElementsByTagName(this.featureBranchFieldname).item(0).getTextContent(),
                     doc.getElementsByTagName(this.originalBranchFieldname).item(0).getTextContent(),
-                    doc.getElementsByTagName(this.targetBranchFieldname).item(0).getTextContent()
-            );
+                    doc.getElementsByTagName(this.targetBranchFieldname).item(0).getTextContent(),
+                    doc.getElementsByTagName("sFixFor").item(0).getTextContent()
+                    );
 
         } catch (Exception e) {
             FogbugzCaseManager.log.log(Level.SEVERE, "Exception while fetching case " + Integer.toString(id), e);
@@ -206,6 +207,7 @@ public class FogbugzCaseManager {
             params.put(this.featureBranchFieldname, fbCase.getFeatureBranch());
             params.put(this.originalBranchFieldname, fbCase.getOriginalBranch());
             params.put(this.targetBranchFieldname, fbCase.getTargetBranch());
+            params.put("sFixFor", fbCase.getMilestone());
             params.put("sEvent", comment);
 
             URL uri = new URL(this.mapToFogbugzUrl(params));
