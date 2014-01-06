@@ -9,10 +9,8 @@ import org.w3c.dom.*;
 import javax.xml.bind.DatatypeConverter;
 import javax.xml.parsers.DocumentBuilder;
 import javax.xml.parsers.DocumentBuilderFactory;
-import java.io.UnsupportedEncodingException;
 import java.net.HttpURLConnection;
 import java.net.URL;
-import java.net.URLEncoder;
 import java.util.*;
 import java.util.logging.Level;
 
@@ -111,7 +109,7 @@ public class FogbugzCaseManager {
                     doc.getElementsByTagName(this.originalBranchFieldname).item(0).getTextContent(),
                     doc.getElementsByTagName(this.targetBranchFieldname).item(0).getTextContent(),
                     doc.getElementsByTagName("sFixFor").item(0).getTextContent()
-                    );
+            );
 
         } catch (Exception e) {
             FogbugzCaseManager.log.log(Level.SEVERE, "Exception while fetching case " + Integer.toString(id), e);
