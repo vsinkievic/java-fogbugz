@@ -80,8 +80,8 @@ public class FogbugzCaseManager {
             HashMap params = new HashMap();  // Hashmap defaults to <String, String>
             params.put("cmd", "search");
             params.put("q", Integer.toString(id));
-            params.put("cols", "ixBug,tags,fOpen,sTitle,sFixFor,ixPersonOpenedBy,ixPersonAssignedTo," +
-                                      this.getCustomFieldsCSV());  // TODO: milestones.
+            params.put("cols", "ixBug,tags,fOpen,sTitle,sFixFor,ixPersonOpenedBy,ixPersonAssignedTo" + // No trailing comma
+                                      this.getCustomFieldsCSV());
 
             URL uri = new URL(this.mapToFogbugzUrl(params));
             HttpURLConnection con = (HttpURLConnection) uri.openConnection();
@@ -105,9 +105,16 @@ public class FogbugzCaseManager {
                     Integer.parseInt(doc.getElementsByTagName("ixPersonAssignedTo").item(0).getTextContent()),
                     tags,
                     Boolean.valueOf(doc.getElementsByTagName("fOpen").item(0).getTextContent()),
-                    doc.getElementsByTagName(this.featureBranchFieldname).item(0).getTextContent(),
-                    doc.getElementsByTagName(this.originalBranchFieldname).item(0).getTextContent(),
-                    doc.getElementsByTagName(this.targetBranchFieldname).item(0).getTextContent(),
+
+                    // The following three field are only to be set if the user wants these custom fields.
+                    // Else we put empty string in there, rest of code understands that.
+                    (this.featureBranchFieldname != null && !this.featureBranchFieldname.isEmpty()) ?
+                            doc.getElementsByTagName(this.featureBranchFieldname).item(0).getTextContent() : "",
+                    (this.originalBranchFieldname != null && !this.originalBranchFieldname.isEmpty()) ?
+                        doc.getElementsByTagName(this.originalBranchFieldname).item(0).getTextContent() : "",
+                    (this.targetBranchFieldname != null && !this.targetBranchFieldname.isEmpty()) ?
+                        doc.getElementsByTagName(this.targetBranchFieldname).item(0).getTextContent() : "",
+
                     doc.getElementsByTagName("sFixFor").item(0).getTextContent()
             );
 
@@ -163,7 +170,7 @@ public class FogbugzCaseManager {
     }
 
     /**
-     * Loop through all FogbugzEvent for given case, and return last (in time) with assignment to gatekeepers.
+     * Loop through all FogbugzEvent for given case id, and return last (in time) with assignment to gatekeepers.
      * @param caseId
      * @return Last event with gatekeeper assignment or null.
      */
@@ -183,7 +190,7 @@ public class FogbugzCaseManager {
 
     /**
      * Saves a case to fogbugz using its API.
-     * Supports creating new cases, by giving case 0 as caseId.
+     * Supports creating new cases, by setting caseId to 0 on case object.
      * @param fbCase The case to save.
      * @param comment A message to pass for this edit.
      * @return boolean, true if all is well, else false.
@@ -202,9 +209,16 @@ public class FogbugzCaseManager {
             params.put("ixPersonAssignedTo", Integer.toString(fbCase.getAssignedTo()));
             params.put("ixPersonOpenedBy", Integer.toString(fbCase.getOpenedBy()));
             params.put("sTags", fbCase.tagsToCSV());
-            params.put(this.featureBranchFieldname, fbCase.getFeatureBranch());
-            params.put(this.originalBranchFieldname, fbCase.getOriginalBranch());
-            params.put(this.targetBranchFieldname, fbCase.getTargetBranch());
+            if (this.featureBranchFieldname != null && !this.featureBranchFieldname.isEmpty()) {
+                params.put(this.featureBranchFieldname, fbCase.getFeatureBranch());
+            }
+            if (this.originalBranchFieldname != null && !this.originalBranchFieldname.isEmpty()) {
+                params.put(this.originalBranchFieldname, fbCase.getOriginalBranch());
+            }
+            if (this.targetBranchFieldname != null && !this.targetBranchFieldname.isEmpty()) {
+                params.put(this.targetBranchFieldname, fbCase.getTargetBranch());
+            }
+
             params.put("sFixFor", fbCase.getMilestone());
             params.put("sEvent", comment);
 
@@ -241,12 +255,30 @@ public class FogbugzCaseManager {
         return fbCase;
     }
 
+    /**
+     * Assign the given case to gatekeepers (uses GatekeeperUserID from global settings)
+     * @param fbCase The case to edit.
+     * @return modified case.
+     */
     public FogbugzCase assignToGatekeepers(FogbugzCase fbCase) {
         fbCase.setAssignedTo(this.gatekeeperUserId);
         return fbCase;
     }
 
+    /**
+     * Returns a list of custom field names, comma seperated. Starts with a comma.
+     */
     private String getCustomFieldsCSV() {
-        return this.featureBranchFieldname + "," + this.originalBranchFieldname + "," + this.targetBranchFieldname;
+        String toReturn = "";
+        if (this.featureBranchFieldname != null && !this.featureBranchFieldname.isEmpty()) {
+            toReturn += "," + this.featureBranchFieldname;
+        }
+        if (this.originalBranchFieldname != null && !this.originalBranchFieldname.isEmpty()) {
+            toReturn += "," + this.originalBranchFieldname;
+        }
+        if (this.targetBranchFieldname != null && !this.targetBranchFieldname.isEmpty()) {
+            toReturn += "," + this.targetBranchFieldname;
+        }
+        return toReturn;
     }
 }
