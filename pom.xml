@@ -1,7 +1,5 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<project xmlns="http://maven.apache.org/POM/4.0.0"
-         xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
-         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
     <modelVersion>4.0.0</modelVersion>
 
     <parent>
@@ -12,7 +10,7 @@
 
     <groupId>org.paylogic</groupId>
     <artifactId>Fogbugz</artifactId>
-    <version>2.0.0</version>
+    <version>2.0.0-SNAPSHOT</version>
     <packaging>jar</packaging>
 
     <name>Fogbugz API interface</name>
@@ -28,9 +26,9 @@
     </licenses>
 
     <scm>
-        <connection>scm:git:https://github.com/paylogic/java-fogbugz/</connection>
-        <developerConnection>scm:git:ssh://git@github.com/paylogic/java-fogbugz/</developerConnection>
-        <url>https://github.com/paylogic/java-fogbugz/</url>
+        <connection>scm:git:git@github.com:paylogic/java-fogbugz.git</connection>
+        <developerConnection>scm:git:git@github.com:paylogic/java-fogbugz.git</developerConnection>
+        <url>git@github.com:paylogic/java-fogbugz.git</url>
     </scm>
 
     <developers>
@@ -69,7 +67,7 @@
         </plugins>
     </build>
 
-    <repositories></repositories>
-    <pluginRepositories></pluginRepositories>
+    <repositories />
+    <pluginRepositories />
 
 </project>
