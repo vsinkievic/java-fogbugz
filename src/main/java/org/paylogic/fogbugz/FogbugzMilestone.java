@@ -1,7 +1,6 @@
 package org.paylogic.fogbugz;
 
 import lombok.Getter;
-import org.apache.commons.lang3.RandomStringUtils;
 
 /**
  * Represents a Fogbugz Milestone (FixFor)
