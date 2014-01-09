@@ -1,6 +1,7 @@
 package org.paylogic.fogbugz;
 
 import lombok.extern.java.Log;
+import org.apache.commons.io.IOUtils;
 import org.apache.http.NameValuePair;
 import org.apache.http.client.utils.URLEncodedUtils;
 import org.apache.http.message.BasicNameValuePair;
@@ -9,6 +10,7 @@ import org.w3c.dom.*;
 import javax.xml.bind.DatatypeConverter;
 import javax.xml.parsers.DocumentBuilder;
 import javax.xml.parsers.DocumentBuilderFactory;
+import java.io.StringWriter;
 import java.net.HttpURLConnection;
 import java.net.URL;
 import java.util.*;
@@ -18,7 +20,7 @@ import java.util.logging.Level;
  * Manager for FogbugzCase objects. Use this to retrieve, save and create cases.
  */
 @Log
-public class FogbugzCaseManager {
+public class FogbugzManager {
 
     private String url;
     private String token;
@@ -29,11 +31,11 @@ public class FogbugzCaseManager {
     private int gatekeeperUserId;
 
     /**
-     * Constructor of FogbugzCaseManager.
+     * Constructor of FogbugzManager.
      */
-    public FogbugzCaseManager(String url, String token, String featureBranchFieldname,
-                              String originalBranchFieldname, String targetBranchFieldname,
-                              int mergekeeperUserId, int gatekeeperUserId) {
+    public FogbugzManager(String url, String token, String featureBranchFieldname,
+                          String originalBranchFieldname, String targetBranchFieldname,
+                          int mergekeeperUserId, int gatekeeperUserId) {
 
         this.url = url;
         this.token = token;
@@ -66,7 +68,7 @@ public class FogbugzCaseManager {
             }
         }
         String output = this.getFogbugzUrl() + "&" + URLEncodedUtils.format(paramList, '&', "UTF-8");
-        FogbugzCaseManager.log.info("Generated URL to send to Fogbugz: " + output);
+        FogbugzManager.log.info("Generated URL to send to Fogbugz: " + output);
         return output;
     }
 
@@ -119,7 +121,7 @@ public class FogbugzCaseManager {
             );
 
         } catch (Exception e) {
-            FogbugzCaseManager.log.log(Level.SEVERE, "Exception while fetching case " + Integer.toString(id), e);
+            FogbugzManager.log.log(Level.SEVERE, "Exception while fetching case " + Integer.toString(id), e);
         }
         return null;
     }
@@ -164,7 +166,7 @@ public class FogbugzCaseManager {
             return eventList;
 
         } catch (Exception e) {
-            FogbugzCaseManager.log.log(Level.SEVERE, "Exception while fetching case " + Integer.toString(id), e);
+            FogbugzManager.log.log(Level.SEVERE, "Exception while fetching case " + Integer.toString(id), e);
         }
         return null;
     }
@@ -225,13 +227,13 @@ public class FogbugzCaseManager {
             URL uri = new URL(this.mapToFogbugzUrl(params));
             HttpURLConnection con = (HttpURLConnection) uri.openConnection();
             String result = con.getInputStream().toString();
-            FogbugzCaseManager.log.info("Fogbugz response got when saving case: " + result);
+            FogbugzManager.log.info("Fogbugz response got when saving case: " + result);
             // If we got this far, all is probably well.
             // TODO: parse XML that gets returned to check status furreal.
             return true;
 
         } catch (Exception e) {
-            FogbugzCaseManager.log.log(Level.SEVERE, "Exception while creating/saving case " + Integer.toString(fbCase.getId()), e);
+            FogbugzManager.log.log(Level.SEVERE, "Exception while creating/saving case " + Integer.toString(fbCase.getId()), e);
         }
         return false;
     }
@@ -280,5 +282,94 @@ public class FogbugzCaseManager {
             toReturn += "," + this.targetBranchFieldname;
         }
         return toReturn;
+    }
+
+    /**
+     * Retrieves all milestones and returns them in a nice List of FogbugzMilestone objects.
+     * @return list of FogbugzMilestones
+     */
+    public List<FogbugzMilestone> getMilestones() {
+        try {
+            HashMap params = new HashMap();  // Hashmap defaults to <String, String>
+            params.put("cmd", "listFixFors");
+
+            URL uri = new URL(this.mapToFogbugzUrl(params));
+            HttpURLConnection con = (HttpURLConnection) uri.openConnection();
+            DocumentBuilderFactory dbFactory = DocumentBuilderFactory.newInstance();
+            DocumentBuilder dBuilder = dbFactory.newDocumentBuilder();
+            Document doc = dBuilder.parse(con.getInputStream());
+
+            List<FogbugzMilestone> milestoneList = new ArrayList<FogbugzMilestone>();
+            NodeList milestonesNodeList = doc.getElementsByTagName("fixfor");
+            if (milestonesNodeList != null && milestonesNodeList.getLength() != 0) {
+                for (int i = 0; i< milestonesNodeList.getLength(); i++) {
+                    Element currentNode = (Element) milestonesNodeList.item(i);
+                    // Construct event object from retrieved data.
+                    milestoneList.add(new FogbugzMilestone(
+                            Integer.parseInt(currentNode.getElementsByTagName("ixFixFor").item(0).getTextContent()),
+                            currentNode.getElementsByTagName("sFixFor").item(0).getTextContent(),
+                            Boolean.valueOf(currentNode.getElementsByTagName("fDeleted").item(0).getTextContent()),
+                            Boolean.valueOf(currentNode.getElementsByTagName("fReallyDeleted").item(0).getTextContent())
+                    ));
+                }
+            }
+
+            return milestoneList;
+
+        } catch (Exception e) {
+            FogbugzManager.log.log(Level.SEVERE, "Exception while fetching milestones", e);
+        }
+        return null;
+    }
+
+    /**
+     * Creates new Milestone in Fogbugz. Please leave id of milestone object empty.
+     * Only creates global milestones.
+     * @param milestone to edit/create
+     */
+    public boolean createMilestone(FogbugzMilestone milestone) {
+        try {
+            HashMap params = new HashMap();
+            // If id = 0, create new case.
+            if (milestone.getId() != 0) {
+                throw new Exception("Editing existing milestones is not supported, please set the id to 0.");
+            }
+
+            params.put("cmd", "newFixFor");
+            params.put("ixProject", "-1");
+            params.put("fAssignable", "1");  // 1 means true somehow...
+            params.put("sFixFor", milestone.getName());
+
+            URL uri = new URL(this.mapToFogbugzUrl(params));
+            HttpURLConnection con = (HttpURLConnection) uri.openConnection();
+
+            StringWriter sw = new StringWriter();
+            IOUtils.copy(con.getInputStream(), sw, "UTF-8");
+            String response = sw.toString();
+
+            FogbugzManager.log.info("Fogbugz response got when saving milestone: " + response);
+            // If we got this far, all is probably well.
+            // TODO: parse XML that gets returned to check status furreal.
+            return true;
+
+        } catch (Exception e) {
+            FogbugzManager.log.log(Level.SEVERE, "Exception while creating milestone " + milestone.getName(), e);
+        }
+        return false;
+    }
+
+    public boolean createMilestoneIfNotExists(String milestoneName) {
+        List<FogbugzMilestone> milestones = this.getMilestones();
+        for (FogbugzMilestone milestone : milestones) {
+            if (milestone.getName().equals(milestoneName)) {
+                // Milestone already exists, no need to create.
+                FogbugzManager.log.info("Milestone " + milestoneName + " already exists, not creating.");
+                return false;
+            }
+        }
+
+        FogbugzManager.log.info("Creating milestone " + milestoneName + ".");
+        FogbugzMilestone newMilestone = new FogbugzMilestone(0, milestoneName, false, false);
+        return this.createMilestone(newMilestone);
     }
 }

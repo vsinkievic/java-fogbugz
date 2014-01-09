@@ -8,7 +8,7 @@ import java.util.List;
 
 /**
  * Class that holds data from fogbugz case.
- * Interact with these objects using the FogbugzCaseManager class.
+ * Interact with these objects using the FogbugzManager class.
  */
 public class FogbugzCase {
     @Getter @Setter private int id;
