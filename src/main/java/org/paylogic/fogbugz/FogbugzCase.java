@@ -116,4 +116,30 @@ public class FogbugzCase {
         this.assignedTo = this.openedBy;
     }
 
+
+    @Override
+    public boolean equals(Object otherCase) {
+        if (!(otherCase instanceof FogbugzCase)) {
+            return false;
+        }
+
+        FogbugzCase o = (FogbugzCase) otherCase;
+
+        if (
+            this.id == o.getId() &&
+            this.title.equals(o.getTitle()) &&
+            this.openedBy == o.getOpenedBy() &&
+            this.assignedTo == o.getAssignedTo() &&
+            this.tags.size() == o.getTags().size() && this.tags.containsAll(o.getTags()) &&
+            this.isOpen == o.isOpen() &&
+            this.featureBranch.equals(o.getFeatureBranch()) &&
+            this.originalBranch.equals(o.getOriginalBranch()) &&
+            this.targetBranch.equals(o.getTargetBranch()) &&
+            this.milestone.equals(o.getMilestone())
+        ) {
+            return true;
+        } else {
+            return false;
+        }
+    }
 }

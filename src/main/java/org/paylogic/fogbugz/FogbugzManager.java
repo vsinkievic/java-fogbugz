@@ -1,16 +1,18 @@
 package org.paylogic.fogbugz;
 
+import com.sun.istack.internal.Nullable;
 import lombok.extern.java.Log;
-import org.apache.commons.io.IOUtils;
 import org.apache.http.NameValuePair;
 import org.apache.http.client.utils.URLEncodedUtils;
 import org.apache.http.message.BasicNameValuePair;
 import org.w3c.dom.*;
+import org.xml.sax.SAXException;
 
 import javax.xml.bind.DatatypeConverter;
 import javax.xml.parsers.DocumentBuilder;
 import javax.xml.parsers.DocumentBuilderFactory;
-import java.io.StringWriter;
+import javax.xml.parsers.ParserConfigurationException;
+import java.io.IOException;
 import java.net.HttpURLConnection;
 import java.net.URL;
 import java.util.*;
@@ -33,17 +35,31 @@ public class FogbugzManager {
     /**
      * Constructor of FogbugzManager.
      */
-    public FogbugzManager(String url, String token, String featureBranchFieldname,
-                          String originalBranchFieldname, String targetBranchFieldname,
+    public FogbugzManager(String url, String token, @Nullable String featureBranchFieldname,
+                          @Nullable String originalBranchFieldname, @Nullable String targetBranchFieldname,
                           int mergekeeperUserId, int gatekeeperUserId) {
 
         this.url = url;
         this.token = token;
-        this.featureBranchFieldname = featureBranchFieldname;
-        this.originalBranchFieldname = originalBranchFieldname;
-        this.targetBranchFieldname = targetBranchFieldname;
         this.mergekeeperUserId = mergekeeperUserId;
         this.gatekeeperUserId = gatekeeperUserId;
+
+        // If user does not want custom fields ignore them.
+        if (featureBranchFieldname != null) {
+            this.featureBranchFieldname = featureBranchFieldname;
+        } else {
+            this.featureBranchFieldname = "";
+        }
+        if (originalBranchFieldname != null) {
+            this.originalBranchFieldname = originalBranchFieldname;
+        } else {
+            this.originalBranchFieldname = "";
+        }
+        if (targetBranchFieldname != null) {
+            this.targetBranchFieldname = targetBranchFieldname;
+        } else {
+            this.targetBranchFieldname = "";
+        }
     }
 
     /**
@@ -73,57 +89,77 @@ public class FogbugzManager {
     }
 
     /**
+     * Fetches the XML from the Fogbugz API and returns a Document object
+     * with the response XML in it, so we can use that.
+     */
+    private Document getFogbugzDocument(Map<String, String> parameters) throws IOException, ParserConfigurationException, SAXException {
+        URL uri = new URL(this.mapToFogbugzUrl(parameters));
+        HttpURLConnection con = (HttpURLConnection) uri.openConnection();
+        DocumentBuilderFactory dbFactory = DocumentBuilderFactory.newInstance();
+        DocumentBuilder dBuilder = dbFactory.newDocumentBuilder();
+        return dBuilder.parse(con.getInputStream());
+    }
+
+    /**
      * Retrieves a case using the Fogbugz API by caseId.
      * @param id the id of the case to fetch.
      * @return FogbugzCase if all is well, else null.
      */
-    public FogbugzCase getCaseById(int id) {
+    public FogbugzCase getCaseById(int id) throws InvalidResponseException, NoSuchCaseException {
+        HashMap params = new HashMap();  // Hashmap defaults to <String, String>
+        params.put("cmd", "search");
+        params.put("q", Integer.toString(id));
+        params.put("cols", "ixBug,tags,fOpen,sTitle,sFixFor,ixPersonOpenedBy,ixPersonAssignedTo" + // No trailing comma
+                                  this.getCustomFieldsCSV());
+
+        Document doc = null;
         try {
-            HashMap params = new HashMap();  // Hashmap defaults to <String, String>
-            params.put("cmd", "search");
-            params.put("q", Integer.toString(id));
-            params.put("cols", "ixBug,tags,fOpen,sTitle,sFixFor,ixPersonOpenedBy,ixPersonAssignedTo" + // No trailing comma
-                                      this.getCustomFieldsCSV());
-
-            URL uri = new URL(this.mapToFogbugzUrl(params));
-            HttpURLConnection con = (HttpURLConnection) uri.openConnection();
-            DocumentBuilderFactory dbFactory = DocumentBuilderFactory.newInstance();
-            DocumentBuilder dBuilder = dbFactory.newDocumentBuilder();
-            Document doc = dBuilder.parse(con.getInputStream());
-
-            List<String> tags = new ArrayList();
-            NodeList tagNodeList = doc.getElementsByTagName("tag");
-            if (tagNodeList != null && tagNodeList.getLength() != 0) {
-                for (int i = 0; i< tagNodeList.getLength(); i++) {
-                    tags.add(tagNodeList.item(i).getTextContent());
-                }
-            }
-
-            // Construct case object from retrieved data.
-            return new FogbugzCase(
-                    id,
-                    doc.getElementsByTagName("sTitle").item(0).getTextContent(),
-                    Integer.parseInt(doc.getElementsByTagName("ixPersonOpenedBy").item(0).getTextContent()),
-                    Integer.parseInt(doc.getElementsByTagName("ixPersonAssignedTo").item(0).getTextContent()),
-                    tags,
-                    Boolean.valueOf(doc.getElementsByTagName("fOpen").item(0).getTextContent()),
-
-                    // The following three field are only to be set if the user wants these custom fields.
-                    // Else we put empty string in there, rest of code understands that.
-                    (this.featureBranchFieldname != null && !this.featureBranchFieldname.isEmpty()) ?
-                            doc.getElementsByTagName(this.featureBranchFieldname).item(0).getTextContent() : "",
-                    (this.originalBranchFieldname != null && !this.originalBranchFieldname.isEmpty()) ?
-                        doc.getElementsByTagName(this.originalBranchFieldname).item(0).getTextContent() : "",
-                    (this.targetBranchFieldname != null && !this.targetBranchFieldname.isEmpty()) ?
-                        doc.getElementsByTagName(this.targetBranchFieldname).item(0).getTextContent() : "",
-
-                    doc.getElementsByTagName("sFixFor").item(0).getTextContent()
-            );
-
+            doc = this.getFogbugzDocument(params);
         } catch (Exception e) {
-            FogbugzManager.log.log(Level.SEVERE, "Exception while fetching case " + Integer.toString(id), e);
+            throw new InvalidResponseException(e.getMessage());
         }
-        return null;
+
+        // Check for case count in cases tag, so we know wheter to parse the response ever further or not.
+        int caseCount = 0;
+        try {
+            Node casesContainer = doc.getElementsByTagName("cases").item(0);
+            caseCount = Integer.parseInt(casesContainer.getAttributes().getNamedItem("count").getTextContent());
+        } catch (NumberFormatException e) {
+            log.log(Level.INFO, "No valid number in case count XML response.", e);
+        }
+        if (caseCount < 1) {
+            throw new NoSuchCaseException("Fogbugz did not return a case for case id " + Integer.toString(id));
+        }
+
+        // Collect tags, and put them in list so we can work with them in a nice way.
+        List<String> tags = new ArrayList();
+        NodeList tagNodeList = doc.getElementsByTagName("tag");
+        if (tagNodeList != null && tagNodeList.getLength() != 0) {
+            for (int i = 0; i< tagNodeList.getLength(); i++) {
+                tags.add(tagNodeList.item(i).getTextContent());
+            }
+        }
+
+        // Construct case object from retrieved data.
+        return new FogbugzCase(
+                id,
+                doc.getElementsByTagName("sTitle").item(0).getTextContent(),
+                Integer.parseInt(doc.getElementsByTagName("ixPersonOpenedBy").item(0).getTextContent()),
+                Integer.parseInt(doc.getElementsByTagName("ixPersonAssignedTo").item(0).getTextContent()),
+                tags,
+                Boolean.valueOf(doc.getElementsByTagName("fOpen").item(0).getTextContent()),
+
+                // The following three field are only to be set if the user wants these custom fields.
+                // Else we put empty string in there, rest of code understands that.
+                (this.featureBranchFieldname != null && !this.featureBranchFieldname.isEmpty()) ?
+                        doc.getElementsByTagName(this.featureBranchFieldname).item(0).getTextContent() : "",
+                (this.originalBranchFieldname != null && !this.originalBranchFieldname.isEmpty()) ?
+                    doc.getElementsByTagName(this.originalBranchFieldname).item(0).getTextContent() : "",
+                (this.targetBranchFieldname != null && !this.targetBranchFieldname.isEmpty()) ?
+                    doc.getElementsByTagName(this.targetBranchFieldname).item(0).getTextContent() : "",
+
+                doc.getElementsByTagName("sFixFor").item(0).getTextContent()
+        );
     }
 
     /**
@@ -138,11 +174,7 @@ public class FogbugzManager {
             params.put("q", Integer.toString(id));
             params.put("cols", "events");
 
-            URL uri = new URL(this.mapToFogbugzUrl(params));
-            HttpURLConnection con = (HttpURLConnection) uri.openConnection();
-            DocumentBuilderFactory dbFactory = DocumentBuilderFactory.newInstance();
-            DocumentBuilder dBuilder = dbFactory.newDocumentBuilder();
-            Document doc = dBuilder.parse(con.getInputStream());
+            Document doc = this.getFogbugzDocument(params);
 
             List<FogbugzEvent> eventList = new ArrayList<FogbugzEvent>();
             NodeList eventsNodeList = doc.getElementsByTagName("event");
@@ -224,10 +256,8 @@ public class FogbugzManager {
             params.put("sFixFor", fbCase.getMilestone());
             params.put("sEvent", comment);
 
-            URL uri = new URL(this.mapToFogbugzUrl(params));
-            HttpURLConnection con = (HttpURLConnection) uri.openConnection();
-            String result = con.getInputStream().toString();
-            FogbugzManager.log.info("Fogbugz response got when saving case: " + result);
+            Document doc = this.getFogbugzDocument(params);
+            FogbugzManager.log.info("Fogbugz response got when saving case: " + doc.toString());
             // If we got this far, all is probably well.
             // TODO: parse XML that gets returned to check status furreal.
             return true;
@@ -293,11 +323,7 @@ public class FogbugzManager {
             HashMap params = new HashMap();  // Hashmap defaults to <String, String>
             params.put("cmd", "listFixFors");
 
-            URL uri = new URL(this.mapToFogbugzUrl(params));
-            HttpURLConnection con = (HttpURLConnection) uri.openConnection();
-            DocumentBuilderFactory dbFactory = DocumentBuilderFactory.newInstance();
-            DocumentBuilder dBuilder = dbFactory.newDocumentBuilder();
-            Document doc = dBuilder.parse(con.getInputStream());
+            Document doc = this.getFogbugzDocument(params);
 
             List<FogbugzMilestone> milestoneList = new ArrayList<FogbugzMilestone>();
             NodeList milestonesNodeList = doc.getElementsByTagName("fixfor");
@@ -319,7 +345,7 @@ public class FogbugzManager {
         } catch (Exception e) {
             FogbugzManager.log.log(Level.SEVERE, "Exception while fetching milestones", e);
         }
-        return null;
+        return new ArrayList<FogbugzMilestone>();
     }
 
     /**
@@ -340,14 +366,9 @@ public class FogbugzManager {
             params.put("fAssignable", "1");  // 1 means true somehow...
             params.put("sFixFor", milestone.getName());
 
-            URL uri = new URL(this.mapToFogbugzUrl(params));
-            HttpURLConnection con = (HttpURLConnection) uri.openConnection();
+            Document doc = this.getFogbugzDocument(params);
 
-            StringWriter sw = new StringWriter();
-            IOUtils.copy(con.getInputStream(), sw, "UTF-8");
-            String response = sw.toString();
-
-            FogbugzManager.log.info("Fogbugz response got when saving milestone: " + response);
+            FogbugzManager.log.info("Fogbugz response got when saving milestone: " + doc.toString());
             // If we got this far, all is probably well.
             // TODO: parse XML that gets returned to check status furreal.
             return true;

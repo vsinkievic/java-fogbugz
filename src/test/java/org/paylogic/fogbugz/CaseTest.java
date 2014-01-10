@@ -1,0 +1,132 @@
+package org.paylogic.fogbugz;
+
+
+import org.junit.Before;
+import org.junit.Test;
+import org.junit.runner.RunWith;
+import org.powermock.core.classloader.annotations.PrepareForTest;
+import org.powermock.modules.junit4.PowerMockRunner;
+import org.w3c.dom.Document;
+import org.xml.sax.SAXException;
+
+import javax.xml.parsers.DocumentBuilder;
+import javax.xml.parsers.DocumentBuilderFactory;
+import javax.xml.parsers.ParserConfigurationException;
+import java.io.File;
+import java.io.IOException;
+import java.net.URL;
+
+import static org.easymock.EasyMock.anyObject;
+import static org.easymock.EasyMock.verify;
+import static org.powermock.api.easymock.PowerMock.*;
+
+
+/**
+ * Test class that tests everything to do with cases.
+ */
+@RunWith(PowerMockRunner.class)
+@PrepareForTest(FogbugzManager.class)
+class CaseTest {
+    private boolean setUpIsDone = false;
+    private FogbugzManager manager;
+
+    @Before
+    public void setUp() {
+        if (setUpIsDone) {
+            return;
+        }
+
+//        manager = new FogbugzManager("http://localhost/fogbugz/", "asdfasdf12341234",
+//                                     "plugin_customfields_at_fogcreek_com_featurexbranchx12",
+//                                     "plugin_customfields_at_fogcreek_com_originalxbranchv23",
+//                                     "plugin_customfields_at_fogcreek_com_targetxbranchj81", 1, 1);
+//        System.out.println(junit.runner.Version.id());
+        setUpIsDone = true;
+    }
+
+    @Test
+    public void testFetchCaseByIdWithCustomFields() throws Exception {
+        FogbugzManager tested = createPartialMock(FogbugzManager.class, new String[]{"getFogbugzDocument"},
+                "http://localhost/fogbugz/", "asdfasdf12341234", "plugin_customfields_at_fogcreek_com_featurexbranchx12",
+                "plugin_customfields_at_fogcreek_com_originalxbranchv23",
+                "plugin_customfields_at_fogcreek_com_targetxbranchj81", 2, 2);
+
+        FogbugzCase expected = new FogbugzCase(7, "HALLO!", 2, 2, "merged", true,
+                                               "maikelwever/repo1#c7", "r1336", "r1336", "1336");
+
+        expectPrivate(tested, "getFogbugzDocument", anyObject()).andReturn(fetchDocumentFromFile("test_case_7.xml"));
+        replay(tested);
+
+        FogbugzCase parsed = tested.getCaseById(7);
+        verify(tested);
+
+        assert expected.equals(parsed);
+    }
+
+    @Test
+    public void testFetchCaseByIdWithoutCustomFields() throws Exception {
+        FogbugzManager tested = createPartialMock(FogbugzManager.class, new String[]{"getFogbugzDocument"},
+                "http://localhost/fogbugz/", "asdfasdf12341234", "", "", "", 2, 2);
+
+        FogbugzCase expected = new FogbugzCase(7, "HALLO!", 2, 2, "merged", true, "", "", "", "1336");
+
+        expectPrivate(tested, "getFogbugzDocument", anyObject()).andReturn(fetchDocumentFromFile("test_case_7_no_customfields.xml"));
+        replay(tested);
+
+        FogbugzCase parsed = tested.getCaseById(7);
+        verify(tested);
+
+        assert expected.equals(parsed);
+    }
+
+    @Test
+    public void testFetchCaseByIdWithNullCustomFields() throws Exception {
+        FogbugzManager tested = createPartialMock(FogbugzManager.class, new String[]{"getFogbugzDocument"});
+
+        FogbugzCase expected = new FogbugzCase(7, "HALLO!", 2, 2, "merged", true, "", "", "", "1336");
+
+        expectPrivate(tested, "getFogbugzDocument", anyObject()).andReturn(fetchDocumentFromFile("test_case_7_no_customfields.xml"));
+        replay(tested);
+
+        FogbugzCase parsed = tested.getCaseById(7);
+        verify(tested);
+
+        assert expected.equals(parsed);
+    }
+
+    @Test(expected=NoSuchCaseException.class)
+    public void testFetchNonExistingCase() throws Exception {
+        FogbugzManager tested = createPartialMock(FogbugzManager.class, new String[]{"getFogbugzDocument"},
+                "http://localhost/fogbugz/", "asdfasdf12341234", "plugin_customfields_at_fogcreek_com_featurexbranchx12",
+                "plugin_customfields_at_fogcreek_com_originalxbranchv23",
+                "plugin_customfields_at_fogcreek_com_targetxbranchj81", 2, 2);
+
+        expectPrivate(tested, "getFogbugzDocument", anyObject()).andReturn(fetchDocumentFromFile("test_case_non_existant.xml"));
+        replay(tested);
+
+        FogbugzCase parsed = tested.getCaseById(37);
+        verify(tested);
+    }
+
+    public void testSavingModifiedCase() throws Exception {
+
+    }
+
+    public void testCaseCreation() throws Exception {
+
+    }
+
+    /**
+     * Helper method to get documents from files on disk.
+     */
+    private Document fetchDocumentFromFile(String filename) throws ParserConfigurationException, IOException, SAXException {
+        URL url = this.getClass().getResource("/" + filename);
+        File testFile = new File(url.getFile());
+        assert testFile.exists();
+
+        DocumentBuilderFactory dbFactory = DocumentBuilderFactory.newInstance();
+        DocumentBuilder builder = dbFactory.newDocumentBuilder();
+        Document doc = builder.parse(testFile);
+        return doc;
+    }
+}
