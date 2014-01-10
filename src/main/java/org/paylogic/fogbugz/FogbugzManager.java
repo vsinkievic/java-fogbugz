@@ -1,6 +1,6 @@
 package org.paylogic.fogbugz;
 
-import com.sun.istack.internal.Nullable;
+import edu.umd.cs.findbugs.annotations.Nullable;
 import lombok.extern.java.Log;
 import org.apache.http.NameValuePair;
 import org.apache.http.client.utils.URLEncodedUtils;
