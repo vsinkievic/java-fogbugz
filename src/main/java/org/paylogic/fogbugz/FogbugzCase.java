@@ -17,14 +17,18 @@ public class FogbugzCase {
     @Getter @Setter private int assignedTo;
     @Getter @Setter private List<String> tags;
     @Getter @Setter private boolean isOpen;
+    @Getter @Setter private String milestone;
+
+
+    // Our custom fields. TODO: find nicer way to include custom fields.
     @Getter @Setter private String featureBranch;
     @Getter @Setter private String originalBranch;
     @Getter @Setter private String targetBranch;
-    @Getter @Setter private String milestone;
+    @Getter @Setter private String approvedRevision;
 
     public FogbugzCase(int id, String title, int openedBy, int assignedTo,
                        List<String> tags, boolean isOpen, String featureBranch,
-                       String originalBranch, String targetBranch, String milestone) {
+                       String originalBranch, String targetBranch, String milestone, String approvedRevision) {
         this.id = id;
         this.title = title;
         this.openedBy = openedBy;
@@ -35,11 +39,12 @@ public class FogbugzCase {
         this.originalBranch = originalBranch;
         this.targetBranch = targetBranch;
         this.milestone = milestone;
+        this.approvedRevision = approvedRevision;
     }
 
     public FogbugzCase(int id, String title, int openedBy, int assignedTo,
                        String tags, boolean isOpen, String featureBranch,
-                       String originalBranch, String targetBranch, String milestone) {
+                       String originalBranch, String targetBranch, String milestone, String approvedRevision) {
         this.id = id;
         this.title = title;
         this.openedBy = openedBy;
@@ -50,6 +55,7 @@ public class FogbugzCase {
         this.originalBranch = originalBranch;
         this.targetBranch = targetBranch;
         this.milestone = milestone;
+        this.approvedRevision = approvedRevision;
     }
 
     /**
@@ -135,7 +141,8 @@ public class FogbugzCase {
             this.featureBranch.equals(o.getFeatureBranch()) &&
             this.originalBranch.equals(o.getOriginalBranch()) &&
             this.targetBranch.equals(o.getTargetBranch()) &&
-            this.milestone.equals(o.getMilestone())
+            this.milestone.equals(o.getMilestone()) &&
+            this.approvedRevision.equals(o.getApprovedRevision())
         ) {
             return true;
         } else {

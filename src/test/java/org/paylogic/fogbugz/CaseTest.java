@@ -48,11 +48,11 @@ class CaseTest {
     public void testFetchCaseByIdWithCustomFields() throws Exception {
         FogbugzManager tested = createPartialMock(FogbugzManager.class, new String[]{"getFogbugzDocument"},
                 "http://localhost/fogbugz/", "asdfasdf12341234", "plugin_customfields_at_fogcreek_com_featurexbranchx12",
-                "plugin_customfields_at_fogcreek_com_originalxbranchv23",
-                "plugin_customfields_at_fogcreek_com_targetxbranchj81", 2, 2);
+                "plugin_customfields_at_fogcreek_com_originalxbranchv23", "plugin_customfields_at_fogcreek_com_targetxbranchj81",
+                "plugin_customfields_at_fogcreek_com_approvedxrevisiona44", 2, 2);
 
         FogbugzCase expected = new FogbugzCase(7, "HALLO!", 2, 2, "merged", true,
-                                               "maikelwever/repo1#c7", "r1336", "r1336", "1336");
+                                               "maikelwever/repo1#c7", "r1336", "r1336", "1336", "asdf1234");
 
         expectPrivate(tested, "getFogbugzDocument", anyObject()).andReturn(fetchDocumentFromFile("test_case_7.xml"));
         replay(tested);
@@ -66,9 +66,9 @@ class CaseTest {
     @Test
     public void testFetchCaseByIdWithoutCustomFields() throws Exception {
         FogbugzManager tested = createPartialMock(FogbugzManager.class, new String[]{"getFogbugzDocument"},
-                "http://localhost/fogbugz/", "asdfasdf12341234", "", "", "", 2, 2);
+                "http://localhost/fogbugz/", "asdfasdf12341234", "", "", "", "", 2, 2);
 
-        FogbugzCase expected = new FogbugzCase(7, "HALLO!", 2, 2, "merged", true, "", "", "", "1336");
+        FogbugzCase expected = new FogbugzCase(7, "HALLO!", 2, 2, "merged", true, "", "", "", "", "1336");
 
         expectPrivate(tested, "getFogbugzDocument", anyObject()).andReturn(fetchDocumentFromFile("test_case_7_no_customfields.xml"));
         replay(tested);
@@ -83,7 +83,7 @@ class CaseTest {
     public void testFetchCaseByIdWithNullCustomFields() throws Exception {
         FogbugzManager tested = createPartialMock(FogbugzManager.class, new String[]{"getFogbugzDocument"});
 
-        FogbugzCase expected = new FogbugzCase(7, "HALLO!", 2, 2, "merged", true, "", "", "", "1336");
+        FogbugzCase expected = new FogbugzCase(7, "HALLO!", 2, 2, "merged", true, "", "", "", "", "1336");
 
         expectPrivate(tested, "getFogbugzDocument", anyObject()).andReturn(fetchDocumentFromFile("test_case_7_no_customfields.xml"));
         replay(tested);
@@ -98,8 +98,8 @@ class CaseTest {
     public void testFetchNonExistingCase() throws Exception {
         FogbugzManager tested = createPartialMock(FogbugzManager.class, new String[]{"getFogbugzDocument"},
                 "http://localhost/fogbugz/", "asdfasdf12341234", "plugin_customfields_at_fogcreek_com_featurexbranchx12",
-                "plugin_customfields_at_fogcreek_com_originalxbranchv23",
-                "plugin_customfields_at_fogcreek_com_targetxbranchj81", 2, 2);
+                "plugin_customfields_at_fogcreek_com_originalxbranchv23", "plugin_customfields_at_fogcreek_com_targetxbranchj81",
+                "plugin_customfields_at_fogcreek_com_approvedxrevisiona44", 2, 2);
 
         expectPrivate(tested, "getFogbugzDocument", anyObject()).andReturn(fetchDocumentFromFile("test_case_non_existant.xml"));
         replay(tested);

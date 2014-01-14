@@ -1,6 +1,7 @@
 package org.paylogic.fogbugz;
 
 import edu.umd.cs.findbugs.annotations.Nullable;
+import lombok.Getter;
 import lombok.extern.java.Log;
 import org.apache.http.NameValuePair;
 import org.apache.http.client.utils.URLEncodedUtils;
@@ -26,18 +27,19 @@ public class FogbugzManager {
 
     private String url;
     private String token;
-    private String featureBranchFieldname;
-    private String originalBranchFieldname;
-    private String targetBranchFieldname;
-    private int mergekeeperUserId;
-    private int gatekeeperUserId;
+    @Getter private String featureBranchFieldname;
+    @Getter private String originalBranchFieldname;
+    @Getter private String targetBranchFieldname;
+    @Getter private String approvedRevisionFieldname;
+    @Getter private int mergekeeperUserId;
+    @Getter private int gatekeeperUserId;
 
     /**
      * Constructor of FogbugzManager.
      */
     public FogbugzManager(String url, String token, @Nullable String featureBranchFieldname,
                           @Nullable String originalBranchFieldname, @Nullable String targetBranchFieldname,
-                          int mergekeeperUserId, int gatekeeperUserId) {
+                          @Nullable String approvedRevisionFieldname, int mergekeeperUserId, int gatekeeperUserId) {
 
         this.url = url;
         this.token = token;
@@ -59,6 +61,11 @@ public class FogbugzManager {
             this.targetBranchFieldname = targetBranchFieldname;
         } else {
             this.targetBranchFieldname = "";
+        }
+        if (approvedRevisionFieldname != null) {
+            this.approvedRevisionFieldname = approvedRevisionFieldname;
+        } else {
+            this.approvedRevisionFieldname = "";
         }
     }
 
@@ -149,7 +156,7 @@ public class FogbugzManager {
                 tags,
                 Boolean.valueOf(doc.getElementsByTagName("fOpen").item(0).getTextContent()),
 
-                // The following three field are only to be set if the user wants these custom fields.
+                // The following four field are only to be set if the user wants these custom fields.
                 // Else we put empty string in there, rest of code understands that.
                 (this.featureBranchFieldname != null && !this.featureBranchFieldname.isEmpty()) ?
                         doc.getElementsByTagName(this.featureBranchFieldname).item(0).getTextContent() : "",
@@ -157,6 +164,8 @@ public class FogbugzManager {
                     doc.getElementsByTagName(this.originalBranchFieldname).item(0).getTextContent() : "",
                 (this.targetBranchFieldname != null && !this.targetBranchFieldname.isEmpty()) ?
                     doc.getElementsByTagName(this.targetBranchFieldname).item(0).getTextContent() : "",
+                (this.approvedRevisionFieldname != null && !this.approvedRevisionFieldname.isEmpty()) ?
+                        doc.getElementsByTagName(this.approvedRevisionFieldname).item(0).getTextContent() : "",
 
                 doc.getElementsByTagName("sFixFor").item(0).getTextContent()
         );
@@ -252,6 +261,9 @@ public class FogbugzManager {
             if (this.targetBranchFieldname != null && !this.targetBranchFieldname.isEmpty()) {
                 params.put(this.targetBranchFieldname, fbCase.getTargetBranch());
             }
+            if (this.approvedRevisionFieldname != null && !this.approvedRevisionFieldname.isEmpty()) {
+                params.put(this.approvedRevisionFieldname, fbCase.getApprovedRevision());
+            }
 
             params.put("sFixFor", fbCase.getMilestone());
             params.put("sEvent", comment);
@@ -310,6 +322,9 @@ public class FogbugzManager {
         }
         if (this.targetBranchFieldname != null && !this.targetBranchFieldname.isEmpty()) {
             toReturn += "," + this.targetBranchFieldname;
+        }
+        if (this.approvedRevisionFieldname != null && !this.approvedRevisionFieldname.isEmpty()) {
+            toReturn += "," + this.approvedRevisionFieldname;
         }
         return toReturn;
     }
