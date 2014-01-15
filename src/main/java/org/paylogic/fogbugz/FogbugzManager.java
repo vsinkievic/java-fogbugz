@@ -113,9 +113,23 @@ public class FogbugzManager {
      * @return FogbugzCase if all is well, else null.
      */
     public FogbugzCase getCaseById(int id) throws InvalidResponseException, NoSuchCaseException {
+        List<FogbugzCase> caseList = this.searchForCases(Integer.toString(id));
+        if (caseList.size() > 1) {
+            throw new InvalidResponseException("Expected one case, found multiple, aborting.");
+        }
+        return caseList.get(0);
+    }
+
+
+    /**
+     * Retrieves cases using the Fogbugz API by a query
+     * @param query fogbugz search query
+     * @return List of cases
+     */
+    public List<FogbugzCase> searchForCases(String query) throws InvalidResponseException, NoSuchCaseException {
         HashMap params = new HashMap();  // Hashmap defaults to <String, String>
         params.put("cmd", "search");
-        params.put("q", Integer.toString(id));
+        params.put("q", query);
         params.put("cols", "ixBug,tags,fOpen,sTitle,sFixFor,ixPersonOpenedBy,ixPersonAssignedTo" + // No trailing comma
                                   this.getCustomFieldsCSV());
 
@@ -135,8 +149,19 @@ public class FogbugzManager {
             log.log(Level.INFO, "No valid number in case count XML response.", e);
         }
         if (caseCount < 1) {
-            throw new NoSuchCaseException("Fogbugz did not return a case for case id " + Integer.toString(id));
+            throw new NoSuchCaseException("Fogbugz did not return a case for query id " + query);
         }
+
+        NodeList caseNodes = doc.getElementsByTagName("case");
+        ArrayList<FogbugzCase> caseList = new ArrayList<FogbugzCase>();
+        for (int i = 0; i < caseNodes.getLength(); i++) {
+            caseList.add(this.constructCaseFromXmlNode(caseNodes.item(i)));
+        }
+        return caseList;
+    }
+
+    private FogbugzCase constructCaseFromXmlNode(Node caseNode) {
+        Element doc = (Element) caseNode;
 
         // Collect tags, and put them in list so we can work with them in a nice way.
         List<String> tags = new ArrayList();
@@ -149,7 +174,7 @@ public class FogbugzManager {
 
         // Construct case object from retrieved data.
         return new FogbugzCase(
-                id,
+                Integer.parseInt(doc.getElementsByTagName("ixBug").item(0).getTextContent()),
                 doc.getElementsByTagName("sTitle").item(0).getTextContent(),
                 Integer.parseInt(doc.getElementsByTagName("ixPersonOpenedBy").item(0).getTextContent()),
                 Integer.parseInt(doc.getElementsByTagName("ixPersonAssignedTo").item(0).getTextContent()),
@@ -161,9 +186,9 @@ public class FogbugzManager {
                 (this.featureBranchFieldname != null && !this.featureBranchFieldname.isEmpty()) ?
                         doc.getElementsByTagName(this.featureBranchFieldname).item(0).getTextContent() : "",
                 (this.originalBranchFieldname != null && !this.originalBranchFieldname.isEmpty()) ?
-                    doc.getElementsByTagName(this.originalBranchFieldname).item(0).getTextContent() : "",
+                        doc.getElementsByTagName(this.originalBranchFieldname).item(0).getTextContent() : "",
                 (this.targetBranchFieldname != null && !this.targetBranchFieldname.isEmpty()) ?
-                    doc.getElementsByTagName(this.targetBranchFieldname).item(0).getTextContent() : "",
+                        doc.getElementsByTagName(this.targetBranchFieldname).item(0).getTextContent() : "",
                 (this.approvedRevisionFieldname != null && !this.approvedRevisionFieldname.isEmpty()) ?
                         doc.getElementsByTagName(this.approvedRevisionFieldname).item(0).getTextContent() : "",
 
