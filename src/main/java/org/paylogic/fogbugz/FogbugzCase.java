@@ -28,7 +28,7 @@ public class FogbugzCase {
 
     public FogbugzCase(int id, String title, int openedBy, int assignedTo,
                        List<String> tags, boolean isOpen, String featureBranch,
-                       String originalBranch, String targetBranch, String milestone, String approvedRevision) {
+                       String originalBranch, String targetBranch, String approvedRevision, String milestone) {
         this.id = id;
         this.title = title;
         this.openedBy = openedBy;
@@ -44,7 +44,7 @@ public class FogbugzCase {
 
     public FogbugzCase(int id, String title, int openedBy, int assignedTo,
                        String tags, boolean isOpen, String featureBranch,
-                       String originalBranch, String targetBranch, String milestone, String approvedRevision) {
+                       String originalBranch, String targetBranch, String approvedRevision, String milestone) {
         this.id = id;
         this.title = title;
         this.openedBy = openedBy;
