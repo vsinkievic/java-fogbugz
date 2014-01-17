@@ -3,9 +3,6 @@ package org.paylogic.fogbugz;
 import edu.umd.cs.findbugs.annotations.Nullable;
 import lombok.Getter;
 import lombok.extern.java.Log;
-import org.apache.http.NameValuePair;
-import org.apache.http.client.utils.URLEncodedUtils;
-import org.apache.http.message.BasicNameValuePair;
 import org.w3c.dom.*;
 import org.xml.sax.SAXException;
 
@@ -14,8 +11,10 @@ import javax.xml.parsers.DocumentBuilder;
 import javax.xml.parsers.DocumentBuilderFactory;
 import javax.xml.parsers.ParserConfigurationException;
 import java.io.IOException;
+import java.io.UnsupportedEncodingException;
 import java.net.HttpURLConnection;
 import java.net.URL;
+import java.net.URLEncoder;
 import java.util.*;
 import java.util.logging.Level;
 
@@ -82,15 +81,14 @@ public class FogbugzManager {
      * @param params Map with parameters to encode.
      * @return String which represents API URL.
      */
-    private String mapToFogbugzUrl(Map<String, String> params) {
-        List<NameValuePair> paramList = new ArrayList<NameValuePair>();
+    private String mapToFogbugzUrl(Map<String, String> params) throws UnsupportedEncodingException {
+        String output = this.getFogbugzUrl();
         for (String key: params.keySet()) {
             String value = params.get(key);
             if (!value.isEmpty()) {
-                paramList.add(new BasicNameValuePair(key, value));
+                output += "&" + URLEncoder.encode(key, "UTF-8") + "=" + URLEncoder.encode(value, "UTF-8");
             }
         }
-        String output = this.getFogbugzUrl() + "&" + URLEncodedUtils.format(paramList, '&', "UTF-8");
         FogbugzManager.log.info("Generated URL to send to Fogbugz: " + output);
         return output;
     }
