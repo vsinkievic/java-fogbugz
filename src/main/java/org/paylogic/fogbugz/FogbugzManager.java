@@ -83,7 +83,7 @@ public class FogbugzManager {
      */
     private String mapToFogbugzUrl(Map<String, String> params) throws UnsupportedEncodingException {
         String output = this.getFogbugzUrl();
-        for (String key: params.keySet()) {
+        for (String key : params.keySet()) {
             String value = params.get(key);
             if (!value.isEmpty()) {
                 output += "&" + URLEncoder.encode(key, "UTF-8") + "=" + URLEncoder.encode(value, "UTF-8");
@@ -94,7 +94,7 @@ public class FogbugzManager {
     }
 
     /**
-     * Fetches the XML from the Fogbugz API and returns a Document object
+     * Fetches the XML from the Fogbugz API and returns a Document object 
      * with the response XML in it, so we can use that.
      */
     private Document getFogbugzDocument(Map<String, String> parameters) throws IOException, ParserConfigurationException, SAXException {
@@ -118,7 +118,6 @@ public class FogbugzManager {
         return caseList.get(0);
     }
 
-
     /**
      * Retrieves cases using the Fogbugz API by a query
      * @param query fogbugz search query
@@ -129,7 +128,7 @@ public class FogbugzManager {
         params.put("cmd", "search");
         params.put("q", query);
         params.put("cols", "ixBug,tags,fOpen,sTitle,sFixFor,ixPersonOpenedBy,ixPersonAssignedTo" + // No trailing comma
-                                  this.getCustomFieldsCSV());
+                this.getCustomFieldsCSV());
 
         Document doc = null;
         try {
@@ -165,7 +164,7 @@ public class FogbugzManager {
         List<String> tags = new ArrayList();
         NodeList tagNodeList = doc.getElementsByTagName("tag");
         if (tagNodeList != null && tagNodeList.getLength() != 0) {
-            for (int i = 0; i< tagNodeList.getLength(); i++) {
+            for (int i = 0; i < tagNodeList.getLength(); i++) {
                 tags.add(tagNodeList.item(i).getTextContent());
             }
         }
@@ -178,18 +177,18 @@ public class FogbugzManager {
                 Integer.parseInt(doc.getElementsByTagName("ixPersonAssignedTo").item(0).getTextContent()),
                 tags,
                 Boolean.valueOf(doc.getElementsByTagName("fOpen").item(0).getTextContent()),
-
+                
                 // The following four field are only to be set if the user wants these custom fields.
                 // Else we put empty string in there, rest of code understands that.
-                (this.featureBranchFieldname != null && !this.featureBranchFieldname.isEmpty()) ?
+                (this.featureBranchFieldname != null && !this.featureBranchFieldname.isEmpty()) ? 
                         doc.getElementsByTagName(this.featureBranchFieldname).item(0).getTextContent() : "",
-                (this.originalBranchFieldname != null && !this.originalBranchFieldname.isEmpty()) ?
+                (this.originalBranchFieldname != null && !this.originalBranchFieldname.isEmpty()) ? 
                         doc.getElementsByTagName(this.originalBranchFieldname).item(0).getTextContent() : "",
-                (this.targetBranchFieldname != null && !this.targetBranchFieldname.isEmpty()) ?
+                (this.targetBranchFieldname != null && !this.targetBranchFieldname.isEmpty()) ? 
                         doc.getElementsByTagName(this.targetBranchFieldname).item(0).getTextContent() : "",
-                (this.approvedRevisionFieldname != null && !this.approvedRevisionFieldname.isEmpty()) ?
+                (this.approvedRevisionFieldname != null && !this.approvedRevisionFieldname.isEmpty()) ? 
                         doc.getElementsByTagName(this.approvedRevisionFieldname).item(0).getTextContent() : "",
-
+                
                 doc.getElementsByTagName("sFixFor").item(0).getTextContent()
         );
     }
@@ -211,7 +210,7 @@ public class FogbugzManager {
             List<FogbugzEvent> eventList = new ArrayList<FogbugzEvent>();
             NodeList eventsNodeList = doc.getElementsByTagName("event");
             if (eventsNodeList != null && eventsNodeList.getLength() != 0) {
-                for (int i = 0; i< eventsNodeList.getLength(); i++) {
+                for (int i = 0; i < eventsNodeList.getLength(); i++) {
                     Element currentNode = (Element) eventsNodeList.item(i);
                     // Construct event object from retrieved data.
                     eventList.add(new FogbugzEvent(
@@ -245,7 +244,7 @@ public class FogbugzManager {
         Collections.sort(eventList);
         Collections.reverse(eventList);
 
-        for (FogbugzEvent ev: eventList) {
+        for (FogbugzEvent ev : eventList) {
             if (ev.getPersonAssignedTo() == this.gatekeeperUserId) {
                 return ev;
             }
@@ -255,7 +254,7 @@ public class FogbugzManager {
     }
 
     /**
-     * Saves a case to fogbugz using its API.
+     * Saves a case to fogbugz using its API. 
      * Supports creating new cases, by setting caseId to 0 on case object.
      * @param fbCase The case to save.
      * @param comment A message to pass for this edit.
@@ -332,8 +331,30 @@ public class FogbugzManager {
         return fbCase;
     }
 
+    public FogbugzUser getFogbugzUser(int ix) {
+        HashMap<String, String> params = new HashMap<String, String>();
+        params.put("cmd", "viewPerson");
+        params.put("ixPerson", "" + ix);
+        Document doc;
+        try {
+            doc = this.getFogbugzDocument(params);
+        } catch (IOException e) {
+            FogbugzManager.log.log(Level.SEVERE, "Could not get person with index: " + ix);
+            return null;
+        } catch (ParserConfigurationException e) {
+            FogbugzManager.log.log(Level.SEVERE, "Could not get person with index: " + ix);
+            return null;
+        } catch (SAXException e) {
+            FogbugzManager.log.log(Level.SEVERE, "Could not get person with index: " + ix);
+            return null;
+        }
+        String fullName = doc.getElementsByTagName("sFullName").item(0).getTextContent();
+        return new FogbugzUser(ix, fullName);
+
+    }
+
     /**
-     * Returns a list of custom field names, comma seperated. Starts with a comma.
+     * Returns a list of custom field names, comma separated. Starts with a comma.
      */
     private String getCustomFieldsCSV() {
         String toReturn = "";
@@ -366,7 +387,7 @@ public class FogbugzManager {
             List<FogbugzMilestone> milestoneList = new ArrayList<FogbugzMilestone>();
             NodeList milestonesNodeList = doc.getElementsByTagName("fixfor");
             if (milestonesNodeList != null && milestonesNodeList.getLength() != 0) {
-                for (int i = 0; i< milestonesNodeList.getLength(); i++) {
+                for (int i = 0; i < milestonesNodeList.getLength(); i++) {
                     Element currentNode = (Element) milestonesNodeList.item(i);
                     // Construct event object from retrieved data.
                     milestoneList.add(new FogbugzMilestone(
@@ -387,7 +408,7 @@ public class FogbugzManager {
     }
 
     /**
-     * Creates new Milestone in Fogbugz. Please leave id of milestone object empty.
+     * Creates new Milestone in Fogbugz. Please leave id of milestone object empty. 
      * Only creates global milestones.
      * @param milestone to edit/create
      */
