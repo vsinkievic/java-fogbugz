@@ -1,0 +1,32 @@
+<response>
+    <person>
+        <ixPerson>1</ixPerson>
+        <sFullName>
+<![CDATA[ First Last ]]>
+        </sFullName>
+        <sEmail>
+<![CDATA[ example@example.com ]]>
+        </sEmail>
+        <sPhone/>
+        <fAdministrator>false</fAdministrator>
+        <fCommunity>false</fCommunity>
+        <fVirtual>false</fVirtual>
+        <fDeleted>false</fDeleted>
+        <fNotify>true</fNotify>
+        <sHomepage/>
+        <sLocale>
+<![CDATA[ * ]]>
+        </sLocale>
+        <sLanguage>
+<![CDATA[ * ]]>
+        </sLanguage>
+        <sTimeZoneKey>
+<![CDATA[ * ]]>
+        </sTimeZoneKey>
+        <sSnippetKey>
+<![CDATA[ ` ]]>
+        </sSnippetKey>
+        <ixBugWorkingOn>0</ixBugWorkingOn>
+        <nType>0</nType>
+    </person>
+</response>

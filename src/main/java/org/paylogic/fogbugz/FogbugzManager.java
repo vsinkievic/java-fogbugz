@@ -83,7 +83,7 @@ public class FogbugzManager {
      */
     private String mapToFogbugzUrl(Map<String, String> params) throws UnsupportedEncodingException {
         String output = this.getFogbugzUrl();
-        for (String key: params.keySet()) {
+        for (String key : params.keySet()) {
             String value = params.get(key);
             if (!value.isEmpty()) {
                 output += "&" + URLEncoder.encode(key, "UTF-8") + "=" + URLEncoder.encode(value, "UTF-8");
@@ -118,7 +118,6 @@ public class FogbugzManager {
         return caseList.get(0);
     }
 
-
     /**
      * Retrieves cases using the Fogbugz API by a query
      * @param query fogbugz search query
@@ -129,7 +128,7 @@ public class FogbugzManager {
         params.put("cmd", "search");
         params.put("q", query);
         params.put("cols", "ixBug,tags,fOpen,sTitle,sFixFor,ixPersonOpenedBy,ixPersonAssignedTo" + // No trailing comma
-                                  this.getCustomFieldsCSV());
+                this.getCustomFieldsCSV());
 
         Document doc = null;
         try {
@@ -165,7 +164,7 @@ public class FogbugzManager {
         List<String> tags = new ArrayList();
         NodeList tagNodeList = doc.getElementsByTagName("tag");
         if (tagNodeList != null && tagNodeList.getLength() != 0) {
-            for (int i = 0; i< tagNodeList.getLength(); i++) {
+            for (int i = 0; i < tagNodeList.getLength(); i++) {
                 tags.add(tagNodeList.item(i).getTextContent());
             }
         }
@@ -211,7 +210,7 @@ public class FogbugzManager {
             List<FogbugzEvent> eventList = new ArrayList<FogbugzEvent>();
             NodeList eventsNodeList = doc.getElementsByTagName("event");
             if (eventsNodeList != null && eventsNodeList.getLength() != 0) {
-                for (int i = 0; i< eventsNodeList.getLength(); i++) {
+                for (int i = 0; i < eventsNodeList.getLength(); i++) {
                     Element currentNode = (Element) eventsNodeList.item(i);
                     // Construct event object from retrieved data.
                     eventList.add(new FogbugzEvent(
@@ -245,7 +244,7 @@ public class FogbugzManager {
         Collections.sort(eventList);
         Collections.reverse(eventList);
 
-        for (FogbugzEvent ev: eventList) {
+        for (FogbugzEvent ev : eventList) {
             if (ev.getPersonAssignedTo() == this.gatekeeperUserId) {
                 return ev;
             }
@@ -332,8 +331,30 @@ public class FogbugzManager {
         return fbCase;
     }
 
+    public FogbugzUser getFogbugzUser(int ix) {
+        HashMap<String, String> params = new HashMap<String, String>();
+        params.put("cmd", "viewPerson");
+        params.put("ixPerson", "" + ix);
+        Document doc;
+        try {
+            doc = this.getFogbugzDocument(params);
+        } catch (IOException e) {
+            FogbugzManager.log.log(Level.SEVERE, "Could not get person with index: " + ix);
+            return null;
+        } catch (ParserConfigurationException e) {
+            FogbugzManager.log.log(Level.SEVERE, "Could not get person with index: " + ix);
+            return null;
+        } catch (SAXException e) {
+            FogbugzManager.log.log(Level.SEVERE, "Could not get person with index: " + ix);
+            return null;
+        }
+        String fullName = doc.getElementsByTagName("sFullName").item(0).getTextContent();
+        return new FogbugzUser(ix, fullName);
+
+    }
+
     /**
-     * Returns a list of custom field names, comma seperated. Starts with a comma.
+     * Returns a list of custom field names, comma separated. Starts with a comma.
      */
     private String getCustomFieldsCSV() {
         String toReturn = "";
@@ -366,7 +387,7 @@ public class FogbugzManager {
             List<FogbugzMilestone> milestoneList = new ArrayList<FogbugzMilestone>();
             NodeList milestonesNodeList = doc.getElementsByTagName("fixfor");
             if (milestonesNodeList != null && milestonesNodeList.getLength() != 0) {
-                for (int i = 0; i< milestonesNodeList.getLength(); i++) {
+                for (int i = 0; i < milestonesNodeList.getLength(); i++) {
                     Element currentNode = (Element) milestonesNodeList.item(i);
                     // Construct event object from retrieved data.
                     milestoneList.add(new FogbugzMilestone(
