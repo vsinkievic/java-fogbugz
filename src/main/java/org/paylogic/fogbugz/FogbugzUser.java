@@ -13,4 +13,13 @@ public class FogbugzUser {
         this.name = name;
     }
     
+    @Override
+    public boolean equals(Object other){
+        if (other instanceof FogbugzUser){
+            FogbugzUser o = (FogbugzUser) other;
+            return o.ix == this.ix && o.name == this.name;
+        }
+        return false;
+    }
+
 }

@@ -1,0 +1,21 @@
+<response>
+    <cases count="1">
+        <case ixBug="123" operations="edit,assign,resolve,remind">
+            <ixBug>123</ixBug>
+            <fOpen>true</fOpen>
+            <sTitle>
+<![CDATA[ Test case name ]]>
+            </sTitle>
+            <sFixFor>
+<![CDATA[ Undecided ]]>
+            </sFixFor>
+            <ixPersonOpenedBy>1</ixPersonOpenedBy>
+            <ixPersonAssignedTo>1</ixPersonAssignedTo>
+            <tags/>
+            <plugin_customfields_at_fogcreek_com_featurexbranchx12/>
+            <plugin_customfields_at_fogcreek_com_originalxbranchv23/>
+            <plugin_customfields_at_fogcreek_com_targetxbranchj81/>
+            <plugin_customfields_at_fogcreek_com_approvedxrevisiona44/>
+        </case>
+    </cases>
+</response>

@@ -16,7 +16,9 @@ import java.io.File;
 import java.io.IOException;
 import java.net.URL;
 
+import java.util.List;
 import static org.easymock.EasyMock.anyObject;
+import static org.easymock.EasyMock.replay;
 import static org.easymock.EasyMock.verify;
 import static org.powermock.api.easymock.PowerMock.*;
 
@@ -61,6 +63,26 @@ class CaseTest {
         verify(tested);
 
         assert expected.equals(parsed);
+    }
+
+    @Test
+    public void testSearchForCase() throws Exception {
+        FogbugzManager tested = createPartialMock(FogbugzManager.class, new String[]{"getFogbugzDocument"},
+                "http://localhost/fogbugz/", "asdfasdf12341234", "plugin_customfields_at_fogcreek_com_featurexbranchx12",
+                "plugin_customfields_at_fogcreek_com_originalxbranchv23", "plugin_customfields_at_fogcreek_com_targetxbranchj81",
+                "plugin_customfields_at_fogcreek_com_approvedxrevisiona44", 2, 2);
+
+        expectPrivate(tested, "getFogbugzDocument", anyObject()).andReturn(fetchDocumentFromFile("test_case_list.xml"));
+
+        replay(tested);
+
+        List<FogbugzCase> cases = tested.searchForCases("foo");
+
+        verify(tested);
+
+        assert cases.size() == 1;
+        assert cases.get(0) == new FogbugzCase(1, "Test case name", 1, 1, "", true, null, null, null, null, null);
+
     }
 
     @Test
