@@ -177,7 +177,7 @@ public class FogbugzManager {
                 Integer.parseInt(doc.getElementsByTagName("ixPersonAssignedTo").item(0).getTextContent()),
                 tags,
                 Boolean.valueOf(doc.getElementsByTagName("fOpen").item(0).getTextContent()),
-                
+
                 // The following four field are only to be set if the user wants these custom fields.
                 // Else we put empty string in there, rest of code understands that.
                 (this.featureBranchFieldname != null && !this.featureBranchFieldname.isEmpty()) ?
