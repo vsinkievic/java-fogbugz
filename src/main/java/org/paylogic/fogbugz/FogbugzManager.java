@@ -94,7 +94,7 @@ public class FogbugzManager {
     }
 
     /**
-     * Fetches the XML from the Fogbugz API and returns a Document object 
+     * Fetches the XML from the Fogbugz API and returns a Document object
      * with the response XML in it, so we can use that.
      */
     private Document getFogbugzDocument(Map<String, String> parameters) throws IOException, ParserConfigurationException, SAXException {
@@ -180,15 +180,15 @@ public class FogbugzManager {
                 
                 // The following four field are only to be set if the user wants these custom fields.
                 // Else we put empty string in there, rest of code understands that.
-                (this.featureBranchFieldname != null && !this.featureBranchFieldname.isEmpty()) ? 
+                (this.featureBranchFieldname != null && !this.featureBranchFieldname.isEmpty()) ?
                         doc.getElementsByTagName(this.featureBranchFieldname).item(0).getTextContent() : "",
-                (this.originalBranchFieldname != null && !this.originalBranchFieldname.isEmpty()) ? 
+                (this.originalBranchFieldname != null && !this.originalBranchFieldname.isEmpty()) ?
                         doc.getElementsByTagName(this.originalBranchFieldname).item(0).getTextContent() : "",
-                (this.targetBranchFieldname != null && !this.targetBranchFieldname.isEmpty()) ? 
+                (this.targetBranchFieldname != null && !this.targetBranchFieldname.isEmpty()) ?
                         doc.getElementsByTagName(this.targetBranchFieldname).item(0).getTextContent() : "",
-                (this.approvedRevisionFieldname != null && !this.approvedRevisionFieldname.isEmpty()) ? 
+                (this.approvedRevisionFieldname != null && !this.approvedRevisionFieldname.isEmpty()) ?
                         doc.getElementsByTagName(this.approvedRevisionFieldname).item(0).getTextContent() : "",
-                
+
                 doc.getElementsByTagName("sFixFor").item(0).getTextContent()
         );
     }
@@ -254,7 +254,7 @@ public class FogbugzManager {
     }
 
     /**
-     * Saves a case to fogbugz using its API. 
+     * Saves a case to fogbugz using its API.
      * Supports creating new cases, by setting caseId to 0 on case object.
      * @param fbCase The case to save.
      * @param comment A message to pass for this edit.
@@ -408,7 +408,7 @@ public class FogbugzManager {
     }
 
     /**
-     * Creates new Milestone in Fogbugz. Please leave id of milestone object empty. 
+     * Creates new Milestone in Fogbugz. Please leave id of milestone object empty.
      * Only creates global milestones.
      * @param milestone to edit/create
      */
