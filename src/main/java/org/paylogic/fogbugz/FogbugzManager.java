@@ -245,7 +245,7 @@ public class FogbugzManager {
         Collections.reverse(eventList);
 
         for (FogbugzEvent ev : eventList) {
-            if (ev.getPersonAssignedTo() == this.gatekeeperUserId) {
+            if (ev.getPersonAssignedTo() == this.gatekeeperUserId && ev.getPerson() != this.gatekeeperUserId) {
                 return ev;
             }
         }
