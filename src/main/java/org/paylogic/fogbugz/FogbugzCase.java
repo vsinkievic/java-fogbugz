@@ -25,10 +25,12 @@ public class FogbugzCase {
     @Getter @Setter private String originalBranch;
     @Getter @Setter private String targetBranch;
     @Getter @Setter private String approvedRevision;
+    @Getter @Setter private String ciProject;
 
     public FogbugzCase(int id, String title, int openedBy, int assignedTo,
                        List<String> tags, boolean isOpen, String featureBranch,
-                       String originalBranch, String targetBranch, String approvedRevision, String milestone) {
+                       String originalBranch, String targetBranch, String approvedRevision, String milestone,
+                       String ciProject) {
         this.id = id;
         this.title = title;
         this.openedBy = openedBy;
@@ -40,22 +42,15 @@ public class FogbugzCase {
         this.targetBranch = targetBranch;
         this.milestone = milestone;
         this.approvedRevision = approvedRevision;
+        this.ciProject = ciProject;
     }
 
     public FogbugzCase(int id, String title, int openedBy, int assignedTo,
                        String tags, boolean isOpen, String featureBranch,
-                       String originalBranch, String targetBranch, String approvedRevision, String milestone) {
-        this.id = id;
-        this.title = title;
-        this.openedBy = openedBy;
-        this.assignedTo = assignedTo;
-        this.tagsFromCSV(tags);
-        this.isOpen = isOpen;
-        this.featureBranch = featureBranch;
-        this.originalBranch = originalBranch;
-        this.targetBranch = targetBranch;
-        this.milestone = milestone;
-        this.approvedRevision = approvedRevision;
+                       String originalBranch, String targetBranch, String approvedRevision, String ciProject,
+                       String milestone) {
+        this(id, title, openedBy, assignedTo, tagsFromCSV(tags), isOpen, featureBranch, originalBranch,
+                targetBranch, milestone, approvedRevision, ciProject);
     }
 
     /**
@@ -63,12 +58,11 @@ public class FogbugzCase {
      * @param tags A String with tags in CSV format.
      * @return Resulting list, which is also saved.
      */
-    public List<String> tagsFromCSV(String tags) {
+    public static List<String> tagsFromCSV(String tags) {
         List<String> list = new ArrayList();
         for (String tag: tags.split(",")) {
             list.add(tag);
         }
-        this.tags = list;
         return list;
     }
 
@@ -142,7 +136,8 @@ public class FogbugzCase {
             this.originalBranch.equals(o.getOriginalBranch()) &&
             this.targetBranch.equals(o.getTargetBranch()) &&
             this.milestone.equals(o.getMilestone()) &&
-            this.approvedRevision.equals(o.getApprovedRevision())
+            this.approvedRevision.equals(o.getApprovedRevision()) &&
+            this.ciProject.equals(o.getCiProject())
         ) {
             return true;
         } else {

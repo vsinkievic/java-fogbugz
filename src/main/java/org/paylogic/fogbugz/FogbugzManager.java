@@ -30,6 +30,7 @@ public class FogbugzManager {
     @Getter private String originalBranchFieldname;
     @Getter private String targetBranchFieldname;
     @Getter private String approvedRevisionFieldname;
+    @Getter private String ciProjectFieldName;
     @Getter private int mergekeeperUserId;
     @Getter private int gatekeeperUserId;
 
@@ -38,7 +39,8 @@ public class FogbugzManager {
      */
     public FogbugzManager(String url, String token, @Nullable String featureBranchFieldname,
                           @Nullable String originalBranchFieldname, @Nullable String targetBranchFieldname,
-                          @Nullable String approvedRevisionFieldname, int mergekeeperUserId, int gatekeeperUserId) {
+                          @Nullable String approvedRevisionFieldname, @Nullable String ciProjectFieldName,
+                          int mergekeeperUserId, int gatekeeperUserId) {
 
         this.url = url;
         this.token = token;
@@ -65,6 +67,11 @@ public class FogbugzManager {
             this.approvedRevisionFieldname = approvedRevisionFieldname;
         } else {
             this.approvedRevisionFieldname = "";
+        }
+        if (ciProjectFieldName != null) {
+            this.ciProjectFieldName = ciProjectFieldName;
+        } else {
+            this.ciProjectFieldName = "";
         }
     }
 
@@ -188,7 +195,8 @@ public class FogbugzManager {
                         doc.getElementsByTagName(this.targetBranchFieldname).item(0).getTextContent() : "",
                 (this.approvedRevisionFieldname != null && !this.approvedRevisionFieldname.isEmpty()) ?
                         doc.getElementsByTagName(this.approvedRevisionFieldname).item(0).getTextContent() : "",
-
+                (this.ciProjectFieldName != null && !this.ciProjectFieldName.isEmpty()) ?
+                        doc.getElementsByTagName(this.ciProjectFieldName).item(0).getTextContent() : "",
                 doc.getElementsByTagName("sFixFor").item(0).getTextContent()
         );
     }
@@ -287,6 +295,9 @@ public class FogbugzManager {
             if (this.approvedRevisionFieldname != null && !this.approvedRevisionFieldname.isEmpty()) {
                 params.put(this.approvedRevisionFieldname, fbCase.getApprovedRevision());
             }
+            if (this.ciProjectFieldName != null && !this.ciProjectFieldName.isEmpty()) {
+                params.put(this.ciProjectFieldName, fbCase.getCiProject());
+            }
 
             params.put("sFixFor", fbCase.getMilestone());
             params.put("sEvent", comment);
@@ -349,7 +360,7 @@ public class FogbugzManager {
             FogbugzManager.log.log(Level.SEVERE, "Could not get person with index: " + ix);
             return null;
         }
-        String fullName = doc.getElementsByTagName("sFullName").item(0).getTextContent();
+        String fullName = doc.getElementsByTagName("sFullName").item(0).getTextContent().trim();
         return new FogbugzUser(ix, fullName);
 
     }
@@ -370,6 +381,9 @@ public class FogbugzManager {
         }
         if (this.approvedRevisionFieldname != null && !this.approvedRevisionFieldname.isEmpty()) {
             toReturn += "," + this.approvedRevisionFieldname;
+        }
+        if (this.ciProjectFieldName != null && !this.ciProjectFieldName.isEmpty()) {
+            toReturn += "," + this.ciProjectFieldName;
         }
         return toReturn;
     }

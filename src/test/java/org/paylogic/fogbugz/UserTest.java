@@ -37,7 +37,7 @@ public class UserTest {
         FogbugzManager tested = createPartialMock(FogbugzManager.class, new String[]{"getFogbugzDocument"},
                 "http://localhost/fogbugz/", "asdfasdf12341234", "plugin_customfields_at_fogcreek_com_featurexbranchx12",
                 "plugin_customfields_at_fogcreek_com_originalxbranchv23", "plugin_customfields_at_fogcreek_com_targetxbranchj81",
-                "plugin_customfields_at_fogcreek_com_approvedxrevisiona44", 2, 2);
+                "plugin_customfields_at_fogcreek_com_approvedxrevisiona44", "cixproject", 2, 2);
 
         expectPrivate(tested, "getFogbugzDocument", anyObject()).andReturn(fetchDocumentFromFile("test_user.xml"));
 
