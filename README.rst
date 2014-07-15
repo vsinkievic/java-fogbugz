@@ -2,7 +2,7 @@ java-fogbugz
 ============
 
 .. image:: https://travis-ci.org/paylogic/java-fogbugz.svg?branch=master
-:target: https://travis-ci.org/paylogic/java-fogbugz
+    :target: https://travis-ci.org/paylogic/java-fogbugz
 
 A Java container and manager to interact with the Fogbugz 7+ XML API
 
