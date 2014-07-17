@@ -2,6 +2,7 @@ package org.paylogic.fogbugz;
 
 import edu.umd.cs.findbugs.annotations.Nullable;
 import lombok.Getter;
+import lombok.Setter;
 import lombok.extern.java.Log;
 import org.w3c.dom.*;
 import org.xml.sax.SAXException;
@@ -30,7 +31,7 @@ public class FogbugzManager {
     @Getter private String originalBranchFieldname;
     @Getter private String targetBranchFieldname;
     @Getter private String approvedRevisionFieldname;
-    @Getter private String ciProjectFieldName;
+    @Getter @Setter private String ciProjectFieldName;
     @Getter private int mergekeeperUserId;
     @Getter private int gatekeeperUserId;
 
