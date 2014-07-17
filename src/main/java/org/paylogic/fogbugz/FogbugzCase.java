@@ -29,8 +29,8 @@ public class FogbugzCase {
 
     public FogbugzCase(int id, String title, int openedBy, int assignedTo,
                        List<String> tags, boolean isOpen, String featureBranch,
-                       String originalBranch, String targetBranch, String approvedRevision, String milestone,
-                       String ciProject) {
+                       String originalBranch, String targetBranch, String approvedRevision, String ciProject,
+                       String milestone) {
         this.id = id;
         this.title = title;
         this.openedBy = openedBy;
@@ -50,7 +50,7 @@ public class FogbugzCase {
                        String originalBranch, String targetBranch, String approvedRevision, String ciProject,
                        String milestone) {
         this(id, title, openedBy, assignedTo, tagsFromCSV(tags), isOpen, featureBranch, originalBranch,
-                targetBranch, milestone, approvedRevision, ciProject);
+                targetBranch, approvedRevision, ciProject, milestone);
     }
 
     /**
