@@ -10,7 +10,7 @@
 
     <groupId>org.paylogic</groupId>
     <artifactId>Fogbugz</artifactId>
-    <version>2.2.8-SNAPSHOT</version>
+    <version>2.2.8</version>
     <packaging>jar</packaging>
 
     <name>Fogbugz API interface</name>
@@ -29,7 +29,7 @@
         <connection>scm:git:git@github.com:paylogic/java-fogbugz.git</connection>
         <developerConnection>scm:git:git@github.com:paylogic/java-fogbugz.git</developerConnection>
         <url>git@github.com:paylogic/java-fogbugz.git</url>
-      <tag>HEAD</tag>
+      <tag>Fogbugz-2.2.8</tag>
   </scm>
 
     <developers>
