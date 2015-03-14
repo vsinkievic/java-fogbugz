@@ -255,7 +255,32 @@ public class FogbugzManager {
 
         for (FogbugzEvent ev : eventList) {
             int person = ev.getPerson();
-            if (ev.getPersonAssignedTo() == this.gatekeeperUserId && person != this.gatekeeperUserId && person != this.mergekeeperUserId) {
+            if (ev.getPersonAssignedTo() == this.gatekeeperUserId
+                    && person != this.gatekeeperUserId
+                    && person != this.mergekeeperUserId) {
+                return ev;
+            }
+        }
+
+        return null;
+    }
+
+    /**
+     * Loop through all FogbugzEvent for given case id, and return last (in time) with assignment to given user.
+     * @param caseId
+     * @param userId
+     * @return Last event with user assignment or null.
+     */
+    public FogbugzEvent getLastAssignedTo(int caseId, int userId) {
+        List<FogbugzEvent> eventList = this.getEventsForCase(caseId);
+        Collections.sort(eventList);
+        Collections.reverse(eventList);
+
+        for (FogbugzEvent ev : eventList) {
+            int person = ev.getPerson();
+            if (ev.getPersonAssignedTo() == userId
+                    && person != this.gatekeeperUserId
+                    && person != this.mergekeeperUserId) {
                 return ev;
             }
         }
