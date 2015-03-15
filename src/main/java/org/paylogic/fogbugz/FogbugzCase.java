@@ -126,18 +126,18 @@ public class FogbugzCase {
         FogbugzCase o = (FogbugzCase) otherCase;
 
         if (
-            this.id == o.getId() &&
-            this.title.equals(o.getTitle()) &&
-            this.openedBy == o.getOpenedBy() &&
-            this.assignedTo == o.getAssignedTo() &&
-            this.tags.size() == o.getTags().size() && this.tags.containsAll(o.getTags()) &&
-            this.isOpen == o.isOpen() &&
-            this.featureBranch.equals(o.getFeatureBranch()) &&
-            this.originalBranch.equals(o.getOriginalBranch()) &&
-            this.targetBranch.equals(o.getTargetBranch()) &&
-            this.milestone.equals(o.getMilestone()) &&
-            this.approvedRevision.equals(o.getApprovedRevision()) &&
-            this.ciProject.equals(o.getCiProject())
+            this.id == o.id &&
+            this.title.equals(o.title) &&
+            this.openedBy == o.openedBy &&
+            this.assignedTo == o.assignedTo &&
+            this.tags.size() == o.tags.size() && this.tags.containsAll(o.tags) &&
+            this.isOpen == o.isOpen &&
+            this.featureBranch.equals(o.featureBranch) &&
+            this.originalBranch.equals(o.originalBranch) &&
+            this.targetBranch.equals(o.targetBranch) &&
+            this.milestone.equals(o.milestone) &&
+            this.approvedRevision.equals(o.approvedRevision) &&
+            this.ciProject.equals(o.ciProject)
         ) {
             return true;
         } else {
