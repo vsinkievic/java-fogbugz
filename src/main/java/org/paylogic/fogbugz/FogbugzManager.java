@@ -132,7 +132,7 @@ public class FogbugzManager {
      * @return List of cases
      */
     public List<FogbugzCase> searchForCases(String query) throws InvalidResponseException, NoSuchCaseException {
-        HashMap params = new HashMap();  // Hashmap defaults to <String, String>
+        HashMap<String, String> params = new HashMap<String, String>();  // Hashmap defaults to <String, String>
         params.put("cmd", "search");
         params.put("q", query);
         params.put("cols", "ixBug,tags,fOpen,sTitle,sFixFor,ixPersonOpenedBy,ixPersonAssignedTo" + // No trailing comma
@@ -169,7 +169,7 @@ public class FogbugzManager {
         Element doc = (Element) caseNode;
 
         // Collect tags, and put them in list so we can work with them in a nice way.
-        List<String> tags = new ArrayList();
+        ArrayList<String> tags = new ArrayList<String>();
         NodeList tagNodeList = doc.getElementsByTagName("tag");
         if (tagNodeList != null && tagNodeList.getLength() != 0) {
             for (int i = 0; i < tagNodeList.getLength(); i++) {
@@ -209,7 +209,7 @@ public class FogbugzManager {
      */
     public List<FogbugzEvent> getEventsForCase(int id) {
         try {
-            HashMap params = new HashMap();  // Hashmap defaults to <String, String>
+            HashMap<String, String> params = new HashMap<String, String>();  // Hashmap defaults to <String, String>
             params.put("cmd", "search");
             params.put("q", Integer.toString(id));
             params.put("cols", "events");
@@ -297,7 +297,7 @@ public class FogbugzManager {
      */
     public boolean saveCase(FogbugzCase fbCase, String comment) {
         try {
-            HashMap params = new HashMap();
+            HashMap<String, String> params = new HashMap<String, String>();
             // If id = 0, create new case.
             if (fbCase.getId() == 0) {
                 params.put("cmd", "new");
@@ -420,7 +420,7 @@ public class FogbugzManager {
      */
     public List<FogbugzMilestone> getMilestones() {
         try {
-            HashMap params = new HashMap();  // Hashmap defaults to <String, String>
+            HashMap<String, String> params = new HashMap<String, String>();  // Hashmap defaults to <String, String>
             params.put("cmd", "listFixFors");
 
             Document doc = this.getFogbugzDocument(params);
@@ -455,7 +455,7 @@ public class FogbugzManager {
      */
     public boolean createMilestone(FogbugzMilestone milestone) {
         try {
-            HashMap params = new HashMap();
+            HashMap<String, String> params = new HashMap<String, String>();
             // If id = 0, create new case.
             if (milestone.getId() != 0) {
                 throw new Exception("Editing existing milestones is not supported, please set the id to 0.");

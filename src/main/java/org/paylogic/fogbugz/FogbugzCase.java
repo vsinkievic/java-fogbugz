@@ -59,7 +59,7 @@ public class FogbugzCase {
      * @return Resulting list, which is also saved.
      */
     public static List<String> tagsFromCSV(String tags) {
-        List<String> list = new ArrayList();
+        ArrayList<String> list = new ArrayList<String>();
         for (String tag: tags.split(",")) {
             list.add(tag);
         }
