@@ -17,13 +17,6 @@
     <description>Java classes to provide interface to work with FogBugz 7+ XML API</description>
     <url>https://github.com/paylogic/java-fogbugz/</url>
 
-    <scm>
-        <connection>scm:git:ssh://github.com/paylogic/java-fogbugz.git</connection>
-        <developerConnection>scm:git:ssh://git@github.com/paylogic/java-fogbugz.git</developerConnection>
-        <url>https://github.com/paylogic/java-fogbugz/</url>
-        <tag>java-fogbugz-2.2.10-beta</tag>
-    </scm>
-
     <licenses>
         <license>
             <name>MIT License</name>
@@ -36,7 +29,7 @@
         <connection>scm:git:git@github.com:paylogic/java-fogbugz.git</connection>
         <developerConnection>scm:git:git@github.com:paylogic/java-fogbugz.git</developerConnection>
         <url>git@github.com:paylogic/java-fogbugz.git</url>
-      <tag>HEAD</tag>
+      <tag>java-fogbugz-2.2.10-beta</tag>
   </scm>
 
     <developers>
