@@ -2,6 +2,7 @@ package org.paylogic.fogbugz;
 
 import lombok.Getter;
 import lombok.Setter;
+import org.apache.commons.lang3.StringUtils;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -71,15 +72,7 @@ public class FogbugzCase {
      * @return String with tags, as CSV.
      */
     public String tagsToCSV() {
-        String csv = "";
-        for (String tag: this.tags) {
-            csv += tag + ",";
-        }
-        if (csv.length() > 0) {
-            // Remove trailing comma
-            csv = csv.substring(0, csv.length()-1);
-        }
-        return csv;
+        return StringUtils.join(this.tags, ",");
     }
 
     /**
