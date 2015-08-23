@@ -10,3 +10,4 @@
 **/work/
 
 *.iml
+.DS_Store
