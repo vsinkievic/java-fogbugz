@@ -4,8 +4,10 @@ import lombok.Getter;
 import lombok.Setter;
 import org.apache.commons.lang3.StringUtils;
 
+import java.math.BigDecimal;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Objects;
 
 /**
  * Class that holds data from fogbugz case.
@@ -20,7 +22,22 @@ public class FogbugzCase {
     @Getter @Setter private boolean isOpen;
     @Getter @Setter private String milestone;
 
+    private int parentId;
+    private int projectId;
+    private String projectName;
+    private String statusName;
+    private BigDecimal hrsOrigEstimate;
+    private BigDecimal hrsCurrEstimate;
+    private BigDecimal hrsElapsed;
+/*
+ *     parent Long
+    children String
+    status String
+    hrsOrigEst BigDecimal
+    hrsCurrEst BigDecimal
+    hrsElapsed BigDecimal
 
+ */
     // Our custom fields. TODO: find nicer way to include custom fields.
     @Getter @Setter private String featureBranch;
     @Getter @Setter private String originalBranch;
@@ -125,16 +142,85 @@ public class FogbugzCase {
             this.assignedTo == o.assignedTo &&
             this.tags.size() == o.tags.size() && this.tags.containsAll(o.tags) &&
             this.isOpen == o.isOpen &&
-            this.featureBranch.equals(o.featureBranch) &&
-            this.originalBranch.equals(o.originalBranch) &&
-            this.targetBranch.equals(o.targetBranch) &&
-            this.milestone.equals(o.milestone) &&
-            this.approvedRevision.equals(o.approvedRevision) &&
-            this.ciProject.equals(o.ciProject)
+            Objects.equals(this.featureBranch, o.featureBranch) &&
+            Objects.equals(this.originalBranch, o.originalBranch) &&
+            Objects.equals(this.targetBranch, o.targetBranch) &&
+            Objects.equals(this.milestone, o.milestone) &&
+            Objects.equals(this.approvedRevision, o.approvedRevision) &&
+            this.ciProject.equals(o.ciProject) &&
+            this.projectId == o.projectId &&
+            this.parentId == o.parentId &&
+            Objects.equals(this.projectName, o.projectName) &&
+            Objects.equals(this.statusName, o.statusName) &&
+            Objects.equals(this.hrsOrigEstimate, o.hrsOrigEstimate) &&
+            Objects.equals(this.hrsCurrEstimate, o.hrsCurrEstimate) &&
+            Objects.equals(this.hrsElapsed, o.hrsElapsed)
         ) {
             return true;
         } else {
             return false;
         }
     }
+    
+    @Override
+    public String toString() {
+    	return String.format("{ case: %d, parentId: %d, projectId: %d, projectName: '%s', title: '%s', isOpen: '%b', statusName: '%s', assignedTo: %d, hrsOrigEst: %s, hrsCurrEst: %s, hrsElapsed: %s }", 
+    					this.id, this.parentId, this.projectId, this.projectName, this.title, this.isOpen, this.statusName, this.assignedTo, this.hrsOrigEstimate, this.hrsCurrEstimate, this.hrsElapsed);
+    }
+    
+    public int getProjectId() {
+		return projectId;
+	}
+    
+    public void setProjectId(int projectId) {
+		this.projectId = projectId;
+	}
+    
+    public int getParentId() {
+		return parentId;
+	}
+    
+    public void setParentId(int parentId) {
+		this.parentId = parentId;
+	}
+    
+    public String getStatusName() {
+		return statusName;
+	}
+    
+    public void setStatusName(String statusName) {
+		this.statusName = statusName;
+	}
+    
+    public void setHrsOrigEstimate(BigDecimal hrsOrigEstimate) {
+		this.hrsOrigEstimate = hrsOrigEstimate;
+	}
+    
+    public BigDecimal getHrsOrigEstimate() {
+		return hrsOrigEstimate;
+	}
+    
+    public void setHrsCurrEstimate(BigDecimal hrsCurrEstimate) {
+		this.hrsCurrEstimate = hrsCurrEstimate;
+	}
+    
+    public BigDecimal getHrsCurrEstimate() {
+		return hrsCurrEstimate;
+	}
+    
+    public void setHrsElapsed(BigDecimal hrsElapsed) {
+		this.hrsElapsed = hrsElapsed;
+	}
+    
+    public BigDecimal getHrsElapsed() {
+		return hrsElapsed;
+	}
+    
+    public String getProjectName() {
+		return projectName;
+	}
+    
+    public void setProjectName(String projectName) {
+		this.projectName = projectName;
+	}
 }

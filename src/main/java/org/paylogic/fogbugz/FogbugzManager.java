@@ -13,9 +13,14 @@ import javax.xml.parsers.DocumentBuilderFactory;
 import javax.xml.parsers.ParserConfigurationException;
 import java.io.IOException;
 import java.io.UnsupportedEncodingException;
+import java.math.BigDecimal;
+import java.math.RoundingMode;
 import java.net.HttpURLConnection;
 import java.net.URL;
 import java.net.URLEncoder;
+import java.time.LocalDate;
+import java.time.ZonedDateTime;
+import java.time.ZonedDateTime;
 import java.util.*;
 import java.util.logging.Level;
 
@@ -107,6 +112,7 @@ public class FogbugzManager {
      */
     private Document getFogbugzDocument(Map<String, String> parameters) throws IOException, ParserConfigurationException, SAXException {
         URL uri = new URL(this.mapToFogbugzUrl(parameters));
+        System.out.println(uri);
         HttpURLConnection con = (HttpURLConnection) uri.openConnection();
         DocumentBuilderFactory dbFactory = DocumentBuilderFactory.newInstance();
         DocumentBuilder dBuilder = dbFactory.newDocumentBuilder();
@@ -135,7 +141,7 @@ public class FogbugzManager {
         HashMap<String, String> params = new HashMap<String, String>();  // Hashmap defaults to <String, String>
         params.put("cmd", "search");
         params.put("q", query);
-        params.put("cols", "ixBug,tags,fOpen,sTitle,sFixFor,ixPersonOpenedBy,ixPersonAssignedTo" + // No trailing comma
+        params.put("cols", "ixBug,ixBugParent,tags,fOpen,sTitle,sFixFor,ixPersonOpenedBy,ixPersonAssignedTo,ixBugParent,ixBugChildren,ixProject,sProject,sStatus,hrsOrigEst,hrsCurrEst,hrsElapsed" + // No trailing comma
                 this.getCustomFieldsCSV());
 
         Document doc = null;
@@ -165,7 +171,37 @@ public class FogbugzManager {
         return caseList;
     }
 
-    private FogbugzCase constructCaseFromXmlNode(Node caseNode) {
+    public List<FogbugzProject> getFogbugzProjects() throws InvalidResponseException {
+        HashMap<String, String> params = new HashMap<String, String>();
+        params.put("cmd", "listProjects");
+
+        Document doc = null;
+        try {
+            doc = this.getFogbugzDocument(params);
+        } catch (Exception e) {
+            throw new InvalidResponseException(e.getMessage());
+        }
+
+        Node projectContainer = doc.getElementsByTagName("projects").item(0);
+
+        NodeList projectNodes = doc.getElementsByTagName("project");
+        ArrayList<FogbugzProject> projectList = new ArrayList<FogbugzProject>();
+        for (int i = 0; i < projectNodes.getLength(); i++) {
+            projectList.add(this.constructProjectFromXmlNode(projectNodes.item(i)));
+        }
+        return projectList;
+    }
+
+    private FogbugzProject constructProjectFromXmlNode(Node item) {
+        Element doc = (Element) item;
+
+        int id = getTagIntValue(doc, "ixProject");
+        String name = getTagStringValue(doc, "sProject");
+        boolean isDeleted = Boolean.valueOf(getTagStringValue(doc, "fDeleted"));
+        return new FogbugzProject(id, name, isDeleted);
+	}
+
+	private FogbugzCase constructCaseFromXmlNode(Node caseNode) {
         Element doc = (Element) caseNode;
 
         // Collect tags, and put them in list so we can work with them in a nice way.
@@ -178,7 +214,7 @@ public class FogbugzManager {
         }
 
         // Construct case object from retrieved data.
-        return new FogbugzCase(
+        FogbugzCase c = new FogbugzCase(
                 Integer.parseInt(doc.getElementsByTagName("ixBug").item(0).getTextContent()),
                 doc.getElementsByTagName("sTitle").item(0).getTextContent(),
                 Integer.parseInt(doc.getElementsByTagName("ixPersonOpenedBy").item(0).getTextContent()),
@@ -200,9 +236,49 @@ public class FogbugzManager {
                         doc.getElementsByTagName(this.ciProjectFieldName).item(0).getTextContent() : "",
                 doc.getElementsByTagName("sFixFor").item(0).getTextContent()
         );
+        
+        c.setParentId(getTagIntValue(doc, "ixBugParent"));
+        c.setProjectId(getTagIntValue(doc, "ixProject"));
+        c.setProjectName(getTagStringValue(doc, "sProject"));
+        c.setStatusName(getTagStringValue(doc, "sStatus"));
+        c.setHrsOrigEstimate(getTagDecimalValue(doc, "hrsOrigEst"));
+        c.setHrsCurrEstimate(getTagDecimalValue(doc, "hrsCurrEst"));
+        c.setHrsElapsed(getTagDecimalValue(doc, "hrsElapsed"));
+        return c;
     }
 
-    /**
+
+	private String getTagStringValue(Element doc, String tagName) {
+		NodeList node = doc.getElementsByTagName(tagName);
+		if (node.getLength() == 0)
+			return null;
+		String content = node.item(0).getTextContent();
+		return content == null || content.isEmpty() ? null : content.trim();
+	}
+
+	private int getTagIntValue(Element doc, String tagName) {
+		String stringValue = getTagStringValue(doc, tagName);
+		return stringValue == null ? 0 : Integer.parseInt(stringValue);
+	}
+
+	private double getTagDoubleValue(Element doc, String tagName) {
+		String stringValue = getTagStringValue(doc, tagName);
+		return stringValue == null ? 0.0 : Double.parseDouble(stringValue);
+	}
+	
+	private BigDecimal getTagDecimalValue(Element doc, String tagName) {
+		return BigDecimal.valueOf(getTagDoubleValue(doc, tagName)).setScale(2, RoundingMode.HALF_EVEN);
+	}
+
+	private boolean getTagBooleanValue(Element doc, String tagName) {
+		return Boolean.getBoolean(getTagStringValue(doc, tagName));
+	}
+	
+	private ZonedDateTime getTagZonedDateTimeValue(Element doc, String tagName) {
+		String stringValue = getTagStringValue(doc, tagName);
+		return stringValue==null ? null : ZonedDateTime.parse(stringValue);
+	}
+	/**
      * Retrieves all events for a certain case.
      * @param id Case id to fetch events from
      * @return list of FogbugzEvents
@@ -386,12 +462,48 @@ public class FogbugzManager {
             FogbugzManager.log.log(Level.SEVERE, "Could not get person with index: " + ix);
             return null;
         }
-        String fullName = doc.getElementsByTagName("sFullName").item(0).getTextContent().trim();
-        return new FogbugzUser(ix, fullName);
+        Node personContainer = doc.getElementsByTagName("person").item(0);
+        return constructPersonFromXmlNode(personContainer);
+    }
+    
+    
+    public List<FogbugzUser> getFogbugzUsers() {
+        HashMap<String, String> params = new HashMap<String, String>();
+        params.put("cmd", "listPeople");
+        Document doc;
+        List<FogbugzUser> people = new ArrayList<>();
+        try {
+            doc = this.getFogbugzDocument(params);
+        } catch (IOException e) {
+            FogbugzManager.log.log(Level.SEVERE, "Could not get persons");
+            return people;
+        } catch (ParserConfigurationException e) {
+            FogbugzManager.log.log(Level.SEVERE, "Could not get persons");
+            return people;
+        } catch (SAXException e) {
+            FogbugzManager.log.log(Level.SEVERE, "Could not get persons");
+            return people;
+        }
+        Node peopleContainer = doc.getElementsByTagName("people").item(0);
 
+        NodeList personNodes = doc.getElementsByTagName("person");
+        for (int i = 0; i < personNodes.getLength(); i++) {
+            people.add(this.constructPersonFromXmlNode(personNodes.item(i)));
+        }
+        return people;
     }
 
-    /**
+    private FogbugzUser constructPersonFromXmlNode(Node item) {
+        Element doc = (Element) item;
+
+        int id = getTagIntValue(doc, "ixPerson");
+        String fullName = getTagStringValue(doc, "sFullName");
+        String email = getTagStringValue(doc, "sEmail");
+        String phone = getTagStringValue(doc, "sPhone");
+        return new FogbugzUser(id, fullName, email, phone);
+	}
+
+	/**
      * Returns a list of custom field names, comma separated. Starts with a comma.
      */
     private String getCustomFieldsCSV() {
@@ -493,4 +605,59 @@ public class FogbugzManager {
         FogbugzMilestone newMilestone = new FogbugzMilestone(0, milestoneName, false, false);
         return this.createMilestone(newMilestone);
     }
+    
+    public List<FogbugzTimeinterval> getTimeintervals(int caseId) throws InvalidResponseException{
+    	return searchForTimeintervals(caseId, 0, null, null);
+    }
+    
+    public List<FogbugzTimeinterval> getTimeintervals(LocalDate from, LocalDate till) throws InvalidResponseException{
+    	return searchForTimeintervals(0, 0, from, till);
+    }
+    
+    public List<FogbugzTimeinterval> getTimeintervals(int userId, LocalDate from, LocalDate till) throws InvalidResponseException{
+    	return searchForTimeintervals(0, userId, from, till);
+    }
+    
+    private List<FogbugzTimeinterval> searchForTimeintervals(int caseId, int userId, LocalDate from, LocalDate till) throws InvalidResponseException {
+        HashMap<String, String> params = new HashMap<String, String>();  // Hashmap defaults to <String, String>
+        params.put("cmd", "listIntervals");
+        if (caseId > 0)
+        	params.put("ixBug", Integer.toString(caseId));
+        if (userId > 0)
+        	params.put("ixPerson", Integer.toString(userId));
+        else 
+        	params.put("ixPerson", "1");
+        if (from != null)
+        	params.put("dtStart", from.toString());
+        if (till != null)
+        	params.put("dtEnd", till.plusDays(1).toString());
+        
+
+        Document doc = null;
+        try {
+            doc = this.getFogbugzDocument(params);
+        } catch (Exception e) {
+            throw new InvalidResponseException(e.getMessage());
+        }
+
+        NodeList intervalNodes = doc.getElementsByTagName("interval");
+        ArrayList<FogbugzTimeinterval> intervalList = new ArrayList<>();
+        for (int i = 0; i < intervalNodes.getLength(); i++) {
+        	intervalList.add(this.constructTimeintervalFromXmlNode(intervalNodes.item(i)));
+        }
+        return intervalList;
+    }
+
+	private FogbugzTimeinterval constructTimeintervalFromXmlNode(Node item) {
+        Element doc = (Element) item;
+
+        int id = getTagIntValue(doc, "ixInterval");
+        int caseId = getTagIntValue(doc, "ixBug");
+        int personId = getTagIntValue(doc, "ixPerson");
+        boolean isDeleted = getTagBooleanValue(doc, "fDeleted");
+        ZonedDateTime from = getTagZonedDateTimeValue(doc, "dtStart");
+        ZonedDateTime till = getTagZonedDateTimeValue(doc, "dtEnd");
+        return new FogbugzTimeinterval(id, caseId, personId, isDeleted, from, till);
+	}
+    
 }
