@@ -11,7 +11,7 @@ import java.util.Objects;
 
 /**
  * Class that holds data from fogbugz case.
- * Interact with these objects using the FogbugzManager class.
+ * Interact with these objects using the DefaultFogbugzManager class.
  */
 public class FogbugzCase {
     @Getter @Setter private int id;
@@ -22,13 +22,13 @@ public class FogbugzCase {
     @Getter @Setter private boolean isOpen;
     @Getter @Setter private String milestone;
 
-    private int parentId;
-    private int projectId;
-    private String projectName;
-    private String statusName;
-    private BigDecimal hrsOrigEstimate;
-    private BigDecimal hrsCurrEstimate;
-    private BigDecimal hrsElapsed;
+    @Getter @Setter private int parentId;
+    @Getter @Setter private int projectId;
+    @Getter @Setter private String projectName;
+    @Getter @Setter private String statusName;
+    @Getter @Setter private BigDecimal hrsOrigEstimate;
+    @Getter @Setter private BigDecimal hrsCurrEstimate;
+    @Getter @Setter private BigDecimal hrsElapsed;
 /*
  *     parent Long
     children String
@@ -168,59 +168,4 @@ public class FogbugzCase {
     					this.id, this.parentId, this.projectId, this.projectName, this.title, this.isOpen, this.statusName, this.assignedTo, this.hrsOrigEstimate, this.hrsCurrEstimate, this.hrsElapsed);
     }
     
-    public int getProjectId() {
-		return projectId;
-	}
-    
-    public void setProjectId(int projectId) {
-		this.projectId = projectId;
-	}
-    
-    public int getParentId() {
-		return parentId;
-	}
-    
-    public void setParentId(int parentId) {
-		this.parentId = parentId;
-	}
-    
-    public String getStatusName() {
-		return statusName;
-	}
-    
-    public void setStatusName(String statusName) {
-		this.statusName = statusName;
-	}
-    
-    public void setHrsOrigEstimate(BigDecimal hrsOrigEstimate) {
-		this.hrsOrigEstimate = hrsOrigEstimate;
-	}
-    
-    public BigDecimal getHrsOrigEstimate() {
-		return hrsOrigEstimate;
-	}
-    
-    public void setHrsCurrEstimate(BigDecimal hrsCurrEstimate) {
-		this.hrsCurrEstimate = hrsCurrEstimate;
-	}
-    
-    public BigDecimal getHrsCurrEstimate() {
-		return hrsCurrEstimate;
-	}
-    
-    public void setHrsElapsed(BigDecimal hrsElapsed) {
-		this.hrsElapsed = hrsElapsed;
-	}
-    
-    public BigDecimal getHrsElapsed() {
-		return hrsElapsed;
-	}
-    
-    public String getProjectName() {
-		return projectName;
-	}
-    
-    public void setProjectName(String projectName) {
-		this.projectName = projectName;
-	}
 }
