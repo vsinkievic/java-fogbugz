@@ -27,10 +27,10 @@ import static org.powermock.api.easymock.PowerMock.*;
  * Test class that tests everything to do with cases.
  */
 @RunWith(PowerMockRunner.class)
-@PrepareForTest(FogbugzManager.class)
+@PrepareForTest(DefaultFogbugzManager.class)
 class CaseTest {
     private boolean setUpIsDone = false;
-    private FogbugzManager manager;
+    private DefaultFogbugzManager manager;
 
     @Before
     public void setUp() {
@@ -38,7 +38,7 @@ class CaseTest {
             return;
         }
 
-//        manager = new FogbugzManager("http://localhost/fogbugz/", "asdfasdf12341234",
+//        manager = new DefaultFogbugzManager("http://localhost/fogbugz/", "asdfasdf12341234",
 //                                     "plugin_customfields_at_fogcreek_com_featurexbranchx12",
 //                                     "plugin_customfields_at_fogcreek_com_originalxbranchv23",
 //                                     "plugin_customfields_at_fogcreek_com_targetxbranchj81", 1, 1);
@@ -48,7 +48,7 @@ class CaseTest {
 
     @Test
     public void testFetchCaseByIdWithCustomFields() throws Exception {
-        FogbugzManager tested = createPartialMock(FogbugzManager.class, new String[]{"getFogbugzDocument"},
+        DefaultFogbugzManager tested = createPartialMock(DefaultFogbugzManager.class, new String[]{"getFogbugzDocument"},
                 "http://localhost/fogbugz/", "asdfasdf12341234", "plugin_customfields_at_fogcreek_com_featurexbranchx12",
                 "plugin_customfields_at_fogcreek_com_originalxbranchv23", "plugin_customfields_at_fogcreek_com_targetxbranchj81",
                 "plugin_customfields_at_fogcreek_com_approvedxrevisiona44", "cixproject", 2, 2);
@@ -67,7 +67,7 @@ class CaseTest {
 
     @Test
     public void testSearchForCase() throws Exception {
-        FogbugzManager tested = createPartialMock(FogbugzManager.class, new String[]{"getFogbugzDocument"},
+        DefaultFogbugzManager tested = createPartialMock(DefaultFogbugzManager.class, new String[]{"getFogbugzDocument"},
                 "http://localhost/fogbugz/", "asdfasdf12341234", "plugin_customfields_at_fogcreek_com_featurexbranchx12",
                 "plugin_customfields_at_fogcreek_com_originalxbranchv23", "plugin_customfields_at_fogcreek_com_targetxbranchj81",
                 "plugin_customfields_at_fogcreek_com_approvedxrevisiona44", "cixproject", 2, 2);
@@ -87,7 +87,7 @@ class CaseTest {
 
     @Test
     public void testFetchCaseByIdWithoutCustomFields() throws Exception {
-        FogbugzManager tested = createPartialMock(FogbugzManager.class, new String[]{"getFogbugzDocument"},
+        DefaultFogbugzManager tested = createPartialMock(DefaultFogbugzManager.class, new String[]{"getFogbugzDocument"},
                 "http://localhost/fogbugz/", "asdfasdf12341234", "", "", "", "", "", 2, 2);
 
         FogbugzCase expected = new FogbugzCase(7, "HALLO!", 2, 2, "merged", true, "", "", "", "", "1336", "myproject");
@@ -103,7 +103,7 @@ class CaseTest {
 
     @Test
     public void testFetchCaseByIdWithNullCustomFields() throws Exception {
-        FogbugzManager tested = createPartialMock(FogbugzManager.class, new String[]{"getFogbugzDocument"});
+        DefaultFogbugzManager tested = createPartialMock(DefaultFogbugzManager.class, new String[]{"getFogbugzDocument"});
 
         FogbugzCase expected = new FogbugzCase(7, "HALLO!", 2, 2, "merged", true, "", "", "", "", "1336", "myproject");
 
@@ -118,7 +118,7 @@ class CaseTest {
 
     @Test(expected=NoSuchCaseException.class)
     public void testFetchNonExistingCase() throws Exception {
-        FogbugzManager tested = createPartialMock(FogbugzManager.class, new String[]{"getFogbugzDocument"},
+        DefaultFogbugzManager tested = createPartialMock(DefaultFogbugzManager.class, new String[]{"getFogbugzDocument"},
                 "http://localhost/fogbugz/", "asdfasdf12341234", "plugin_customfields_at_fogcreek_com_featurexbranchx12",
                 "plugin_customfields_at_fogcreek_com_originalxbranchv23", "plugin_customfields_at_fogcreek_com_targetxbranchj81",
                 "plugin_customfields_at_fogcreek_com_approvedxrevisiona44", "cixproject", 2, 2);
